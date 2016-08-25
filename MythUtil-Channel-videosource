@@ -1,0 +1,288 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+import requests
+import json
+import re
+import natsort
+
+class MythTVServices():
+    def __init__(self, host=None, port=None):
+        if host is None:
+            host = 'localhost'
+        self.host = host
+        if port is None:
+            port = 6544
+        self.port = port
+        self.session = requests.Session()
+
+    def request(self, service=None, api=None, data={}, method=None):
+        version = '0.28'
+        headers = {
+                    'User-Agent':'{} Python Services API Client'.format(version),
+                    'Accept':'application/json',
+                    'Accept-Encoding':'gzip,deflate'
+                  }
+        if api is None:
+            raise ValueError('api must be specified')
+        url = 'http://{}:{}/{}/{}'.format(self.host, self.port, service, api)
+        if method is None:
+            if bool(data):
+                method = 'post'
+            else:
+                method = 'get'
+        if method == 'get':
+            response = self.session.get(url, headers=headers)
+        elif method == 'post':
+            response = self.session.post(url, headers=headers, data=data)
+        else:
+            raise ValueError('method is not post or get: {}'.format(method))
+        response.raise_for_status()
+        return response.json()
+
+    def Capture(self, api=None, data={}, method=None):
+        return self.request(service='Capture', api=api, data=data, method=method)
+    def Channel(self, api=None, data={}, method=None):
+        return self.request(service='Channel', api=api, data=data, method=method)
+    def Content(self, api=None, data={}, method=None):
+        return self.request(service='Content', api=api, data=data, method=method)
+    def Dvr(self, api=None, data={}, method=None):
+        return self.request(service='Dvr', api=api, data=data, method=method)
+    def Frontend(self, api=None, data={}, method=None):
+        return self.request(service='Frontend', api=api, data=data, method=method)
+    def Guide(self, api=None, data={}, method=None):
+        return self.request(service='Guide', api=api, data=data, method=method)
+    def Myth(self, api=None, data={}, method=None):
+        return self.request(service='Myth', api=api, data=data, method=method)
+    def Video(self, api=None, data={}, method=None):
+        return self.request(service='Video', api=api, data=data, method=method)
+
+def TrueOrFalse(arg):
+    ua = str(arg).upper()
+    if ua == 'TRUE'[:len(ua)]:
+       return True
+    elif ua == 'YES'[:len(ua)]:
+       return True
+    elif ua == '1':
+       return True
+    elif ua == 'FALSE'[:len(ua)]:
+       return False
+    elif ua == 'NO'[:len(ua)]:
+       return False
+    elif ua == '0':
+       return False
+    raise argparse.ArgumentTypeError('{} is not a valid true/false value'.format(arg))
+
+def FreqTable(arg):
+    frequencies = [ "default",
+                    "us-bcast",
+                    "us-cable",
+                    "us-cable-hrc",
+                    "us-cable-irc",
+                    "japan-bcast",
+                    "japan-cable",
+                    "europe-west",
+                    "europe-east",
+                    "italy",
+                    "newzealand",
+                    "australia",
+                    "ireland",
+                    "france",
+                    "china-bcast",
+                    "southafrica",
+                    "argentina",
+                    "australia-optus",
+                    "singapore",
+                    "malaysia",
+                    "israel-hot-matav"
+                  ]
+    if arg in frequencies:
+        return arg
+    raise argparse.ArgumentTypeError('{} is not a valid frequency table value'.format(arg))
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--backend', '--host', action='store', type=str, default='localhost.',
+                        help='the host (backend) to access.  The default is localhost.')
+    parser.add_argument('--port', action='store', type=int, default=6544,
+                        help='the port to connect to on on the host.  The default is 6544')
+    sourcegroup = parser.add_mutually_exclusive_group(required=False)
+    sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
+                        help='the video source name')
+    sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
+                        help='the video source id')
+    actiongroup = parser.add_mutually_exclusive_group(required=False)
+    actiongroup.add_argument('--add', action='store_true', default=False,
+                             help='add a video source')
+    actiongroup.add_argument('--delete', action='store_true', default=False,
+                             help='delete a video source')
+    actiongroup.add_argument('--update', action='store_true', default=False,
+                             help='update a video source')
+    parser.add_argument('--grabber', action='store', type=str,
+                        help='grabber name')
+    parser.add_argument('--config', action='store', type=str,
+                        help='grabber configuration file')
+    parser.add_argument('--use-eit', default=None, dest='useEIT', type=TrueOrFalse,
+                        help='use eit for guide')
+    parser.add_argument('--network-id', action='store', type=int, dest='networkId',
+                        help='provider specific network id')
+    parser.add_argument('--frequency-table', default=None, type=FreqTable, dest='freqTable',
+                        help='frequency table to use')
+    parser.add_argument('--userid', action='store', type=str,
+                        help='userid for schedulesdirect1 (internal) grabber')
+    parser.add_argument('--password', action='store', type=str,
+                        help='password for schedulesdirect1 (internal) grabber')
+    parser.add_argument('--lineupid', action='store', type=str,
+                        help='lineupid for schedulesdirect1 (internal) grabber')
+    parser.add_argument('--new-videosource-name', action='store', type=str, dest='sourceNameNew',
+                        help='new video source name for update')
+    args = parser.parse_args()
+
+    s = MythTVServices(args.backend, args.port)
+
+    try:
+        hostname = s.Myth('GetHostName')['String']
+    except:
+        print ('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
+        sys.exit(1)
+
+    # If no action, just a list of video sources
+    if (not args.add) and (not args.update) and (not args.delete):
+        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.userid is not None) or (args.password is not None) or (args.sourceNameNew is not None):
+            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, userid, password, or new-videosource-name')
+            sys,exit(1)
+        mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
+        print('Configured videosources:')
+        for source in mythsl:
+            if ((args.sourceName is not None) or (args.sourceId is not None)) and (int(source['Id']) != args.sourceId and source['SourceName'] != args.sourceName):
+                continue
+            print('  {}'.format(source['SourceName']))
+            print('    ID:        {}'.format(source['Id']))
+            print('    grabber:   {}'.format(source['Grabber']))
+            print('    config:    {}'.format(source['ConfigPath']))
+            print('    UseEIT:    {}'.format(source['UseEIT']))
+            print('    FreqTable: {}'.format(source['FreqTable']))
+            print('    NetworkID: {}'.format(source['NITId']))
+            print('    userid:    {}'.format(source['UserId']))
+            print('    password:  {}'.format(source['Password']))
+            print('    lineupid:  {}'.format(source['LineupId']))
+        sys.exit(1)
+
+    # Try to locate source name/id if specified
+    mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
+    sourceId = None
+    sourceName = None
+    for source in mythsl:
+        if int(source['Id']) == args.sourceId or source['SourceName'] == args.sourceName:
+            sourceId = int(source['Id'])
+            sourceName = source['SourceName']
+            break
+
+    # Perform actions
+    if args.add:
+        if args.sourceName is None:
+            print('Video source name name must be specified for an add request')
+            sys.exit(1)
+        if sourceId is not None:
+            print('Video source already exists with that name')
+            sys.exit(1)
+        v = {}
+        v['SourceName'] = args.sourceName
+        v['Grabber'] = '/bin/true'
+#       v['ConfigPath'] = None
+#       v['LineupId'] = None
+        v['UserId'] = ''
+#       v['Password'] = None
+        v['FreqTable'] = 'default'
+        v['UseEIT'] = False
+        v['NITId'] = -1
+        if args.grabber is not None:
+            v['Grabber'] = args.grabber
+            if not args.grabber in ['/bin/true', 'eitonly', 'schedulesdirect1']:
+                if args.config is None:
+                    confdir = s.Myth('GetBackendInfo')['BackendInfo']['Env']['MYTHCONFDIR']
+                    v['ConfigPath'] = confdir + '/' + args.sourceName + '.xmltv'
+        if args.config is not None:
+            v['ConfigPath'] = args.config
+        if args.lineupid is not None:
+            v['LineupId'] = args.lineupid
+        if args.userid is not None:
+            v['UserId'] = args.userid
+        if args.password is not None:
+            v['Password'] = args.password
+        if args.useEIT is not None:
+            v['UseEIT'] = args.useEIT
+        if args.freqTable is not None:
+            v['FreqTable'] = args.freqTable
+        if args.networkId is not None:
+            v['NITId'] = args.networkId
+        if int(s.Channel('AddVideoSource', v)['int']) > 0:
+            print('Video source added')
+            sys.exit(0)
+        else:
+            print('Video source addition failed')
+            sys.exit(1)
+
+    elif args.delete:
+        if (args.sourceId is None) and (args.sourceName is None):
+            print('No video source specified to delete')
+            sys.exit(1)
+        if sourceId is None:
+            print('Video source was not found to delete')
+            sys.exit(1)
+        v = {}
+        v['SourceID'] = sourceId
+        if bool(s.Channel('RemoveVideoSource', v)['bool']):
+            print('Video source deleted')
+            sys.exit(0)
+        else:
+            print('Video source deletion failed')
+            sys.exit(1)
+
+    elif args.update:
+        if (args.sourceId is None) and (args.sourceName is None):
+            print('No video source specified to update')
+            sys.exit(1)
+        if sourceId is None:
+            print('Video source was not found to update')
+            sys.exit(1)
+        v = {}
+        v['SourceID'] = sourceId
+        v['SourceName'] = source['SourceName']
+        v['Grabber'] = source['Grabber']
+        v['ConfigPath'] = source['ConfigPath']
+        v['LineupId'] = source['LineupId']
+        v['UserId'] = source['UserId']
+        v['Password'] = source['Password']
+        v['FreqTable'] = source['FreqTable']
+        v['UseEIT'] = source['UseEIT']
+        v['NITId'] = source['NITId']
+        if args.grabber is not None:
+            v['Grabber'] = args.grabber
+            if not args.grabber in ['/bin/true', 'eitonly', 'schedulesdirect1']:
+                if args.config is None:
+                    confdir = s.Myth('GetBackendInfo')['BackendInfo']['Env']['MYTHCONFDIR']
+                    v['ConfigPath'] = confdir + '/' + args.sourceName + '.xmltv'
+        if args.config is not None:
+            v['ConfigPath'] = args.config
+        if args.lineupid is not None:
+            v['LineupId'] = args.lineupid
+        if args.userid is not None:
+            v['UserId'] = args.userid
+        if args.password is not None:
+            v['Password'] = args.password
+        if args.useEIT is not None:
+            v['UseEIT'] = args.useEIT
+        if args.freqTable is not None:
+            v['FreqTable'] = args.freqTable
+        if args.networkId is not None:
+            v['NITId'] = args.networkId
+        if bool(s.Channel('UpdateVideoSource', v)['bool']):
+            print('Video source updated')
+            sys.exit(0)
+        else:
+            print('Video source update failed')
+            sys.exit(1)
+
