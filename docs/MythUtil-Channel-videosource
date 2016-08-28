@@ -1,0 +1,65 @@
+
+MythUtil-Channel-videosource - Report and/or add/delete/update
+the MythTV videosources
+
+
+
+usage: MythUtil-Channel-videosource [-h] [--backend BACKEND] [--port PORT]
+                                    [--videosource-name SOURCENAME | --videosource-id SOURCEID]
+                                    [--add | --delete | --update]
+                                    [--grabber GRABBER] [--config CONFIG]
+                                    [--use-eit USEEIT]
+                                    [--network-id NETWORKID]
+                                    [--frequency-table FREQTABLE]
+                                    [--userid USERID] [--password PASSWORD]
+                                    [--lineupid LINEUPID]
+                                    [--new-videosource-name SOURCENAMENEW]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --backend BACKEND, --host BACKEND
+                        the host (backend) to access. The default is
+                        localhost.
+  --port PORT           the port to connect to on on the host. The default is
+                        6544
+  --videosource-name SOURCENAME
+                        the video source name
+  --videosource-id SOURCEID
+                        the video source id
+  --add                 add a video source
+  --delete              delete a video source
+  --update              update a video source
+  --grabber GRABBER     grabber name
+  --config CONFIG       grabber configuration file
+  --use-eit USEEIT      use eit for guide
+  --network-id NETWORKID
+                        provider specific network id
+  --frequency-table FREQTABLE
+                        frequency table to use
+  --userid USERID       userid for schedulesdirect1 (internal) grabber
+  --password PASSWORD   password for schedulesdirect1 (internal) grabber
+  --lineupid LINEUPID   lineupid for schedulesdirect1 (internal) grabber
+  --new-videosource-name SOURCENAMENEW
+                        new video source name for update
+
+
+
+
+Requirements:  Only tested with MythTV 0.28.
+
+For the examples below, it is presumed you are running on the
+backend host with the default ports and the sourceid of your
+cable lineup is 1.
+
+Scenario:
+
+You simply want to report your videosources
+
+   MythUtil-Channel-videosource 
+
+Scenerio:
+
+You want to delete videosource 2
+
+   MythUtil-Channel-videosource --delete --videosource-id 2
+

@@ -1,0 +1,52 @@
+
+MythUtil-Channel-HDHR-channelCheck - Report the differences
+between the MythTV channel database the channel list from
+a recent generation HDHomeRun.
+
+
+
+usage: MythUtil-Channel-HDHR-channelCheck [-h] --hdhr HDHR [--backend BACKEND]
+                                          [--port PORT]
+                                          (--videosource-name SOURCENAME | --videosource-id SOURCEID)
+                                          [--channel CHANNELINCLUDE [CHANNELINCLUDE ...]]
+                                          [--exclude-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --hdhr HDHR           the HDHomeRun from which to retrieve the lineup
+  --backend BACKEND, --host BACKEND
+                        the host (backend) to access. The default is
+                        localhost.
+  --port PORT           the port to connect to on on the host. The default is
+                        6544
+  --videosource-name SOURCENAME
+                        the video source name
+  --videosource-id SOURCEID
+                        the video source id
+  --channel CHANNELINCLUDE [CHANNELINCLUDE ...], --channels CHANNELINCLUDE [CHANNELINCLUDE ...], --include-channel CHANNELINCLUDE [CHANNELINCLUDE ...], --include-channels CHANNELINCLUDE [CHANNELINCLUDE ...]
+                        list of channels to consider. The default is all
+  --exclude-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...], --exclude-channels CHANNELEXCLUDE [CHANNELEXCLUDE ...], --no-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...], --no-channels CHANNELEXCLUDE [CHANNELEXCLUDE ...]
+                        list of channels to exclude. The default is none
+
+
+
+Requirements:  Only tested with MythTV 0.28, and recent
+HDHR3-CC firmware.  It is unknown if it will work with previous
+revisions.  To insure that the channel map in the HDHR3-CC
+is correct you will need to run a "Detect Channels" from the
+HDHR3-CC web page.  The device will run background scans
+at future intervals to (attempt) to keep the maps accurate,
+but large changes (such as the proposed MCLU rollout) may
+require explicit re-scans.
+
+For the examples below, it is presumed you are running on the
+backend host with the default ports and the sourceid of your
+cable lineup is 1.
+
+Scenario:
+
+You simply want a report on what channels are different
+between your HDHR and MythTV
+
+   MythUtil-Channel-HDHR-channelCheck --hdhr=myhdhr.local --videosource-id=1
+

@@ -1,0 +1,71 @@
+
+MythUtil-Channel-XMLTV-getLineup - Report/Update the MythTV
+channel lineup based on the XMLTV --get-lineup output from
+a supported grabber
+
+
+
+usage: MythUtil-Channel-XMLTV-getLineup [-h] [--backend BACKEND] [--port PORT]
+                                        (--videosource-name SOURCENAME | --videosource-id SOURCEID)
+                                        [--channel CHANNELINCLUDE [CHANNELINCLUDE ...]]
+                                        [--exclude-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...]]
+                                        [--add] [--delete] [--update]
+                                        [--no-update-name]
+                                        [--no-update-callsign]
+                                        [--no-update-icons]
+                                        [--no-update-xmltvid]
+                                        [--no-update-freqid]
+                                        [--no-strict-icon-check]
+                                        [--refresh-icons] [--force-local]
+                                        [file]
+
+positional arguments:
+  file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --backend BACKEND, --host BACKEND
+                        the host (backend) to access. The default is
+                        localhost.
+  --port PORT           the port to connect to on on the host. The default is
+                        6544
+  --videosource-name SOURCENAME
+                        the video source name
+  --videosource-id SOURCEID
+                        the video source id
+  --channel CHANNELINCLUDE [CHANNELINCLUDE ...], --channels CHANNELINCLUDE [CHANNELINCLUDE ...], --include-channel CHANNELINCLUDE [CHANNELINCLUDE ...], --include-channels CHANNELINCLUDE [CHANNELINCLUDE ...]
+                        list of channels to consider. The default is all
+  --exclude-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...], --exclude-channels CHANNELEXCLUDE [CHANNELEXCLUDE ...], --no-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...], --no-channels CHANNELEXCLUDE [CHANNELEXCLUDE ...]
+                        list of channels to exclude. The default is none
+  --add                 add any channels in xmltv lineup
+  --delete              delete any channels not in xmltv lineup
+  --update              update the channels to match xmltv lineup
+  --no-update-name      do not update the channel name
+  --no-update-callsign  do not update the callsign
+  --no-update-icons     do not update the icon
+  --no-update-xmltvid   do not update the xmltvid
+  --no-update-freqid    do not update the frequency id
+  --no-strict-icon-check
+                        do not check remote icon against local (bypass a
+                        slow/expensive check)
+  --refresh-icons       refresh all eligible icons
+  --force-local         override local host determination and force as local
+                        for icon updates
+
+
+
+
+Requirements:  Only tested with MythTV 0.28, and the
+tv_grab_zz_sdjson_sqlite grabber.
+
+For the examples below, it is presumed you are running on the
+backend host with the default ports and the sourceid of your
+cable lineup is 1.
+
+Scenario:
+
+You want to compare your Schedules Direct lineup data
+with your MythTV channels
+
+   tv_grab_zz_sdjson_sqlite --quiet --get-lineup --config-file ~/.mythtv/CABLE.xmltv | MythUtil-Channel-XMLTV-getLineup --videosource-id 1
+
