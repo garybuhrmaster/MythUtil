@@ -345,15 +345,24 @@ if __name__ == '__main__':
                     update = True
             elif not args.noStrictIcon:
                 # Tricky case, if requested, detect icon changes by retriving icon and performing hash
-                mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True)
-                mythChannelIconHash = hashlib.sha256(mythChannelIcon.read()).hexdigest()
-                xmlIconHash = hashlib.sha256(requests.get(xmlChannel['icon']).content).hexdigest()
+                try:
+                    mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True).read()
+                except requests.exceptions.RequestException:
+                    print('Channel {} icon cannot be retrieved from the backend'.format(mythChannel['ChanNum']))
+                    mythChannelIcon = b''
+                mythChannelIconHash = hashlib.sha256(mythChannelIcon).hexdigest()
+                try:
+                    xmlIcon = requests.get(xmlChannel['icon']).content
+                except requests.exceptions.RequestException:
+                    print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['icon']))
+                    xmlIcon = b''
+                xmlIconHash = hashlib.sha256(xmlIcon).hexdigest()
                 if xmlIconHash != mythChannelIconHash:
                     print('Channel {} icon differs from source'.format(mythChannel['ChanNum']))
                     if not args.noUpdateIcons:
                         iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
                         file = open(os.path.join(iconDir, iconFilename), 'wb')
-                        file.write(requests.get(xmlChannel['icon']).content)
+                        file.write(xmlIcon)
                         file.close()
                         data['Icon'] = iconFilename
                         update = True
@@ -363,8 +372,13 @@ if __name__ == '__main__':
                     if iconFilename not in iconList:
                         print('Channel {} icon not in icon directory with required name: "{}"'.format(mythChannel['ChanNum'], iconFilename))
                         if not args.noUpdateIcons:
+                            try:
+                                xmlIcon = requests.get(xmlChannel['icon']).content
+                            except requests.exceptions.RequestException:
+                                print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['icon']))
+                                xmlIcon = b''
                             file = open(os.path.join(iconDir, iconFilename), 'wb')
-                            file.write(requests.get(xmlChannel['icon']).content)
+                            file.write(xmlIcon)
                             file.close()
                             data['Icon'] = iconFilename
                             update = True
