@@ -234,9 +234,11 @@ if __name__ == '__main__':
     lineupType = None
     if lineup.find('type') is not None:
         lineupType = lineup.find('type').text
-    if lineupType not in ['STB']:           # In future, DVB and/or ATSC?
-        print('The XMLTV get-lineup file does not specify a supported type')
+    if lineupType not in ['STB', 'DTV']:
+        print('The XMLTV get-lineup file does not specify a supported type: {}'.format(lineupType))
         sys.exit(1)
+    if lineupType in ['DTV']:                              # Future support for DVB/ATSC?
+        print('The XMLTV get-lineup type ({}) has limited support'.format(lineupType))
 
     for lineupEntry in lineup.iter('lineup-entry'):
         channum = None
@@ -256,11 +258,18 @@ if __name__ == '__main__':
                 callsign = lineupStation.find('short-name').text
             if lineupStation.find('logo') is not None:
                 icon = lineupStation.find('logo').get('url', default=None)
+        freqid = channum
         if lineupEntry.find('stb-channel/stb-preset') is not None:
             freqid = lineupEntry.find('stb-channel/stb-preset').text
 
         # Validate the lineup entry for the type, skip ill-defined entries
         if lineupType == 'STB':
+            if (freqid is None) or (freqid == ''):
+                continue
+            if (channum is None) or (channum == ''):
+                continue
+
+        if (lineupType == 'DTV'):
             if (freqid is None) or (freqid == ''):
                 continue
             if (channum is None) or (channum == ''):
