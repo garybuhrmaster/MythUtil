@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+import requests
+import json
+import re
+import natsort
+
+class MythTVServices():
+    def __init__(self, host=None, port=None):
+        if host is None:
+            host = 'localhost'
+        self.host = host
+        if port is None:
+            port = 6544
+        self.port = port
+        self.session = requests.Session()
+
+    def request(self, service=None, api=None, data={}, method=None):
+        version = '0.28'
+        headers = {
+                    'User-Agent':'{} Python Services API Client'.format(version),
+                    'Accept':'application/json',
+                    'Accept-Encoding':'gzip,deflate'
+                  }
+        if api is None:
+            raise ValueError('api must be specified')
+        url = 'http://{}:{}/{}/{}'.format(self.host, self.port, service, api)
+        if method is None:
+            if bool(data):
+                method = 'post'
+            else:
+                method = 'get'
+        if method == 'get':
+            response = self.session.get(url, headers=headers)
+        elif method == 'post':
+            response = self.session.post(url, headers=headers, data=data)
+        else:
+            raise ValueError('method is not post or get: {}'.format(method))
+        response.raise_for_status()
+        return response.json()
+
+    def Capture(self, api=None, data={}, method=None):
+        return self.request(service='Capture', api=api, data=data, method=method)
+    def Channel(self, api=None, data={}, method=None):
+        return self.request(service='Channel', api=api, data=data, method=method)
+    def Content(self, api=None, data={}, method=None):
+        return self.request(service='Content', api=api, data=data, method=method)
+    def Dvr(self, api=None, data={}, method=None):
+        return self.request(service='Dvr', api=api, data=data, method=method)
+    def Frontend(self, api=None, data={}, method=None):
+        return self.request(service='Frontend', api=api, data=data, method=method)
+    def Guide(self, api=None, data={}, method=None):
+        return self.request(service='Guide', api=api, data=data, method=method)
+    def Myth(self, api=None, data={}, method=None):
+        return self.request(service='Myth', api=api, data=data, method=method)
+    def Video(self, api=None, data={}, method=None):
+        return self.request(service='Video', api=api, data=data, method=method)
+
+def channelNormalize(channel):
+    m0 = re.match('^(\d+)$', channel)
+    m1 = re.match('^(\d+)\.(\d+)$', channel)
+    m2 = re.match('^(\d+)_(\d+)$', channel)
+    m3 = re.match('^(\d+)-(\d+)$', channel)
+    if m0:
+        return '{}'.format(int(m0.group(1)))
+    elif m1:
+        return '{}.{}'.format(int(m1.group(1)), int(m1.group(2)))
+    elif m2:
+        return '{}.{}'.format(int(m1.group(1)), int(m1.group(2)))
+    elif m3:
+        return '{}.{}'.format(int(m1.group(1)), int(m1.group(2)))
+    raise TypeError('Invalid channel: {}'.format(channel))
+
+def channelCheck(channel):
+    try:
+        return channelNormalize(channel)
+    except:
+        raise argparse.ArgumentTypeError('{} is not a valid channel'.format(channel))
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--backend', '--host', action='store', type=str, default='localhost.',
+                        help='the host (backend) to access.  The default is localhost.')
+    parser.add_argument('--port', action='store', type=int, default=6544,
+                        help='the port to connect to on on the host.  The default is 6544')
+    sourcegroup = parser.add_mutually_exclusive_group(required=True)
+    sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
+                        help='the video source name')
+    sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
+                        help='the video source id')
+    parser.add_argument('--channel', '--channels', '--include-channel', '--include-channels', 
+                        nargs='+', type=channelCheck, dest='channelInclude',
+                        help='list of channels to consider.  The default is all')
+    parser.add_argument('--exclude-channel', '--exclude-channels', '--no-channel', '--no-channels', 
+                        nargs='+', type=channelCheck, dest='channelExclude',
+                        help='list of channels to exclude.  The default is none')
+    visiblegroup = parser.add_mutually_exclusive_group(required=False)
+    visiblegroup.add_argument('--force-visible', action='store_true', default=False, dest='forcevisible',
+                        help='force the channel(s) to be set to visible')
+    visiblegroup.add_argument('--force-invisible', action='store_true', default=False, dest='forceinvisible',
+                        help='force the channel(s) to be set to invisible')
+    parser.add_argument('--update', action='store_true', default=False,
+                        help='update the channels to correct any detected problem.  The default is just report')
+    args = parser.parse_args()
+
+    s = MythTVServices(args.backend, args.port)
+
+    try:
+        hostname = s.Myth('GetHostName')['String']
+    except:
+        print ('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
+        sys.exit(1)
+
+    # Validate sourceid/name
+    mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
+    sourceId = None
+    sourceName = None
+    for source in mythsl:
+        if int(source['Id']) == args.sourceId or source['SourceName'] == args.sourceName:
+            sourceId = int(source['Id'])
+            sourceName = source['SourceName']
+            break
+    if sourceId is None:
+        print('Video source not found')
+        sys.exit(1)
+
+    # Get channel list for source
+    mythChannelInfo = s.Channel('GetChannelInfoList', {'SourceID': sourceId, 'Details': True})['ChannelInfoList']['ChannelInfos']
+    mythChannelList = []
+    for mythChannel in mythChannelInfo:
+        if 'ChanNum' not in mythChannel:
+            continue
+        c = channelNormalize(mythChannel['ChanNum'])
+        if args.channelInclude is not None:
+            if c not in args.channelInclude:
+                continue
+        if args.channelExclude is not None:
+            if c in args.channelExclude:
+                continue
+        mythChannelList.append(mythChannel)
+
+    # Report visibility changes
+    mythChannelList = natsort.natsorted(mythChannelList, key=lambda c: c['ChanNum'])
+    for mythChannel in mythChannelList:
+        chanNum = mythChannel['ChanNum']
+        freqId = mythChannel['FrequencyId']
+        mvisible = bool(mythChannel['Visible'] == 'true')
+        desiredvisible = mvisible
+        if args.forcevisible:
+            desiredvisible = True
+        if args.forceinvisible:
+            desiredvisible = False
+        if mvisible != desiredvisible:
+            print('Channel {} visibility should be: {}'.format(chanNum, desiredvisible))
+            # Create update object (for some reason the
+            # names are not the same as a get)?
+            data = {}
+            # Mandatory
+            data['ATSCMajorChannel']   = mythChannel['ATSCMajorChan']
+            data['ATSCMinorChannel']   = mythChannel['ATSCMinorChan']
+            data['ChannelID']          = mythChannel['ChanId']
+            data['ChannelName']        = mythChannel['ChannelName']
+            data['CallSign']           = mythChannel['CallSign']
+            data['MplexID']            = mythChannel['MplexId']
+            data['ServiceID']          = mythChannel['ServiceId']
+            data['SourceID']           = mythChannel['SourceId']
+            data['UseEIT']             = mythChannel['UseEIT']
+            # Optional (and what we want to set)
+            data['visible']            = desiredvisible
+            if args.update:
+                if bool(s.Channel('UpdateDBChannel', data)['bool']):
+                    print ('  Channel {} updated'.format(chanNum))
+                else:
+                    print ('  Channel {} update failed'.format(chanNum))
+
