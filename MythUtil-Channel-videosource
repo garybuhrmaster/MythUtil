@@ -220,6 +220,10 @@ if __name__ == '__main__':
             v['NITId'] = args.networkId
         if int(s.Channel('AddVideoSource', v)['int']) > 0:
             print('Video source added')
+            try:
+                s.Dvr('RescheduleRecordings')
+            except:
+                pass
             sys.exit(0)
         else:
             print('Video source addition failed')
@@ -236,6 +240,10 @@ if __name__ == '__main__':
         v['SourceID'] = sourceId
         if bool(s.Channel('RemoveVideoSource', v)['bool']):
             print('Video source deleted')
+            try:
+                s.Dvr('RescheduleRecordings')
+            except:
+                pass
             sys.exit(0)
         else:
             print('Video source deletion failed')
@@ -281,6 +289,10 @@ if __name__ == '__main__':
             v['NITId'] = args.networkId
         if bool(s.Channel('UpdateVideoSource', v)['bool']):
             print('Video source updated')
+            try:
+                s.Dvr('RescheduleRecordings')
+            except:
+                pass
             sys.exit(0)
         else:
             print('Video source update failed')

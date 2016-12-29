@@ -176,3 +176,8 @@ if __name__ == '__main__':
                 else:
                     print ('  Channel {} update failed'.format(chanNum))
 
+    if args.update:
+        try:
+            s.Dvr('RescheduleRecordings')
+        except:
+            pass

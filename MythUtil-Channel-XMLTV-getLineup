@@ -461,8 +461,13 @@ if __name__ == '__main__':
                 if bool(s.Channel('AddDBChannel', data)['bool']):
                     print ('  Channel {} added'.format(xmlChannel['channum']))
                 else:
+
                     print ('  Channel {} addition failed'.format(xmlChannel['channum']))
 
+    if args.add or args.delete or args.update:
+        try:
+            s.Dvr('RescheduleRecordings')
+        except:
+            pass
+
     sys.exit(0)
-
-
