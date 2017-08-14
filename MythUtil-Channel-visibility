@@ -76,7 +76,7 @@ def channelNormalize(channel):
 def channelCheck(channel):
     try:
         return channelNormalize(channel)
-    except:
+    except Exception:
         raise argparse.ArgumentTypeError('{} is not a valid channel'.format(channel))
 
 if __name__ == '__main__':
@@ -110,7 +110,7 @@ if __name__ == '__main__':
 
     try:
         hostname = s.Myth('GetHostName')['String']
-    except:
+    except Exception:
         print ('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
         sys.exit(1)
 
@@ -179,5 +179,5 @@ if __name__ == '__main__':
     if args.update:
         try:
             s.Dvr('RescheduleRecordings')
-        except:
+        except Exception:
             pass

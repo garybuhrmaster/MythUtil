@@ -87,7 +87,7 @@ def channelNormalize(channel):
 def channelCheck(channel):
     try:
         return channelNormalize(channel)
-    except:
+    except Exception:
         raise argparse.ArgumentTypeError('{} is not a valid channel'.format(channel))
 
 def isWritable(path):
@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
     try:
         hostname = s.Myth('GetHostName')['String']
-    except:
+    except Exception:
         print ('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
         sys.exit(1)
 
@@ -430,7 +430,7 @@ if __name__ == '__main__':
                 # We need to create a valid ChannelID:
                 try:
                     chanId = sourceId * 1000 + int(xmlChannel['channum'])
-                except:
+                except Exception:
                     chanId = sourceId * 1000
                 while True:
                     try:
@@ -438,7 +438,7 @@ if __name__ == '__main__':
                         data['ChanID'] = chanId
                         if int(s.Channel('GetChannelInfo', data)['ChannelInfo']['ChanId']) == 0:
                             break 
-                    except:
+                    except Exception:
                         break
                     chanId += 1
                 data = {}
@@ -467,7 +467,7 @@ if __name__ == '__main__':
     if args.add or args.delete or args.update:
         try:
             s.Dvr('RescheduleRecordings')
-        except:
+        except Exception:
             pass
 
     sys.exit(0)
