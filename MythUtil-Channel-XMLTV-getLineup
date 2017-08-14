@@ -3,6 +3,7 @@
 import argparse
 import sys
 import requests
+import requests.auth
 import json
 import re
 import natsort
@@ -15,7 +16,7 @@ import hashlib
 import urllib.parse
 
 class MythTVServices():
-    def __init__(self, host=None, port=None):
+    def __init__(self, host=None, port=None, username=None, password=None):
         if host is None:
             host = 'localhost'
         self.host = host
@@ -23,6 +24,9 @@ class MythTVServices():
             port = 6544
         self.port = port
         self.session = requests.Session()
+        if username and password:
+            self.session.auth = requests.auth.HTTPDigestAuth(username, password)
+            self.request(service='Myth', api='version')
 
     def request(self, service=None, api=None, data={}, method=None, stream=False):
         version = '0.28'
@@ -110,6 +114,10 @@ if __name__ == '__main__':
                         help='the host (backend) to access.  The default is localhost.')
     parser.add_argument('--port', action='store', type=int, default=6544,
                         help='the port to connect to on on the host.  The default is 6544')
+    parser.add_argument('--username', action='store', type=str, default=None,
+                        help='the username to use for host authentication')
+    parser.add_argument('--password', action='store', type=str, default=None,
+                        help='the password to use for host authentication')
     sourcegroup = parser.add_mutually_exclusive_group(required=True)
     sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
                         help='the video source name')
@@ -146,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('file', nargs='?', type=argparse.FileType('rb'), default=sys.stdin)
     args = parser.parse_args()
 
-    s = MythTVServices(args.backend, args.port)
+    s = MythTVServices(args.backend, args.port, args.username, args.password)
 
     try:
         hostname = s.Myth('GetHostName')['String']
