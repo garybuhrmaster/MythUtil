@@ -130,9 +130,9 @@ if __name__ == '__main__':
                         help='provider specific network id')
     parser.add_argument('--frequency-table', default=None, type=FreqTable, dest='freqTable',
                         help='frequency table to use')
-    parser.add_argument('--userid', action='store', type=str,
+    parser.add_argument('--grabber-userid', action='store', type=str, dest='grabberUserid',
                         help='userid for schedulesdirect1 (internal) grabber')
-    parser.add_argument('--password', action='store', type=str,
+    parser.add_argument('--grabber-password', action='store', type=str, dest='grabberPassword',
                         help='password for schedulesdirect1 (internal) grabber')
     parser.add_argument('--lineupid', action='store', type=str,
                         help='lineupid for schedulesdirect1 (internal) grabber')
@@ -150,8 +150,8 @@ if __name__ == '__main__':
 
     # If no action, just a list of video sources
     if (not args.add) and (not args.update) and (not args.delete):
-        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.userid is not None) or (args.password is not None) or (args.sourceNameNew is not None):
-            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, userid, password, or new-videosource-name')
+        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.grabberUserid is not None) or (args.grabberPassword is not None) or (args.sourceNameNew is not None):
+            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, grabber-userid, grabber-password, or new-videosource-name')
             sys,exit(1)
         mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
         print('Configured videosources:')
@@ -208,10 +208,10 @@ if __name__ == '__main__':
             v['ConfigPath'] = args.config
         if args.lineupid is not None:
             v['LineupId'] = args.lineupid
-        if args.userid is not None:
-            v['UserId'] = args.userid
-        if args.password is not None:
-            v['Password'] = args.password
+        if args.grabberUserid is not None:
+            v['UserId'] = args.grabberUserid
+        if args.grabberPassword is not None:
+            v['Password'] = args.grabberPassword
         if args.useEIT is not None:
             v['UseEIT'] = args.useEIT
         if args.freqTable is not None:
@@ -277,10 +277,10 @@ if __name__ == '__main__':
             v['ConfigPath'] = args.config
         if args.lineupid is not None:
             v['LineupId'] = args.lineupid
-        if args.userid is not None:
-            v['UserId'] = args.userid
-        if args.password is not None:
-            v['Password'] = args.password
+        if args.grabberUserid is not None:
+            v['UserId'] = args.grabberUserid
+        if args.grabberPassword is not None:
+            v['Password'] = args.grabberPassword
         if args.useEIT is not None:
             v['UseEIT'] = args.useEIT
         if args.freqTable is not None:
