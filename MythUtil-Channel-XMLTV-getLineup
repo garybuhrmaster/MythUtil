@@ -149,8 +149,6 @@ if __name__ == '__main__':
                         help='do not check remote icon against local (bypass a slow/expensive check)') 
     parser.add_argument('--refresh-icons', action='store_true', default=False, dest='refreshIcons',
                         help='refresh all eligible icons')
-    parser.add_argument('--force-local', action='store_true', dest='forceLocal',  default=False,
-                        help='override local host determination and force as local for icon updates')
     parser.add_argument('file', nargs='?', type=argparse.FileType('rb'), default=sys.stdin)
     args = parser.parse_args()
 
@@ -174,42 +172,6 @@ if __name__ == '__main__':
     if sourceId is None:
         print('Video source not found')
         sys.exit(1)
-
-    # Verify we can update icons directory if we are going to add/update
-    isLocal = False
-    iconDir = None
-    iconList = {}
-    BE_hostname = s.Myth('GetHostName')['String']
-    Our_hostname = socket.getfqdn()
-    if BE_hostname == Our_hostname or args.forceLocal:
-        isLocal = True
-    if (not args.update) and (not args.add):
-        args.noUpdateIcons = True
-    if isLocal:
-        storageGroupDirs = s.Myth('GetStorageGroupDirs', {'GroupName': 'ChannelIcons', 'HostName': BE_hostname})['StorageGroupDirList']['StorageGroupDirs']
-        if len(storageGroupDirs) > 0:
-            if 'DirName' in storageGroupDirs[0]:
-                iconDir = storageGroupDirs[0]['DirName']
-        if iconDir is None:
-            iconDir = s.Myth('GetBackendInfo')['BackendInfo']['Env']['MYTHCONFDIR'] + '/channels'
-        if not isWritable(iconDir):
-            args.noUpdateIcons = True
-            print ('*WARNING* icon directory ' + iconDir + ' is not writeable, icons will not be added/updated')
-        if os.path.isdir(iconDir):
-            for filename in os.listdir(iconDir):
-                filesize = os.path.getsize(os.path.join(iconDir, filename))
-                filehash = hashlib.sha256(open(os.path.join(iconDir, filename), 'rb').read()).hexdigest()
-                icon = {}
-                icon['filename'] = filename
-                icon['filesize'] = filesize
-                icon['filehash'] = filehash
-                iconList[filename] = icon
-    else:
-        if args.noUpdateIcons:
-            pass
-        else:
-            args.noUpdateIcons = True
-            print ('*WARNING* Not running on the backend, icons will not be added/updated')
 
     # Get channel list for source
     mythChannelInfo = s.Channel('GetChannelInfoList', {'SourceID': sourceId, 'Details': True})['ChannelInfoList']['ChannelInfos']
@@ -349,56 +311,50 @@ if __name__ == '__main__':
                 print('Channel {} has a new icon'.format(mythChannel['ChanNum']))
                 if not args.noUpdateIcons:
                     iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
-                    if iconFilename not in iconList:
-                        file = open(os.path.join(iconDir, iconFilename), 'wb')
-                        file.write(requests.get(xmlChannel['icon']).content)
-                        file.close()
-                    data['Icon'] = iconFilename
-                    update = True
+                    downloadFileData={}
+                    downloadFileData['StorageGroup'] = 'ChannelIcons'
+                    downloadFileData['URL'] = xmlChannel['icon']
+                    if bool(s.Content('DownloadFile', downloadFileData)['bool']):
+                        data['Icon'] = iconFilename
+                        update = True
+                    else:
+                        print('   Channel {} icon download failed'.format(mythChannel['ChanNum']))
             elif (xmlChannel['icon'] is None) and (mythChannel['IconURL'] != ''):
                 print('Channel {} icon is no longer valid'.format(mythChannel['ChanNum']))
                 if not args.noUpdateIcons:
                     data['Icon'] = ''
                     update = True
-            elif not args.noStrictIcon:
-                # Tricky case, if requested, detect icon changes by retriving icon and performing hash
-                try:
-                    mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True).read()
-                except requests.exceptions.RequestException:
-                    print('Channel {} icon cannot be retrieved from the backend'.format(mythChannel['ChanNum']))
-                    mythChannelIcon = b''
-                mythChannelIconHash = hashlib.sha256(mythChannelIcon).hexdigest()
-                try:
-                    xmlIcon = requests.get(xmlChannel['icon']).content
-                except requests.exceptions.RequestException:
-                    print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['icon']))
-                    xmlIcon = b''
-                xmlIconHash = hashlib.sha256(xmlIcon).hexdigest()
-                if xmlIconHash != mythChannelIconHash:
-                    print('Channel {} icon differs from source'.format(mythChannel['ChanNum']))
-                    if not args.noUpdateIcons:
-                        iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
-                        file = open(os.path.join(iconDir, iconFilename), 'wb')
-                        file.write(xmlIcon)
-                        file.close()
-                        data['Icon'] = iconFilename
-                        update = True
             else:
-                if isLocal:
-                    iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
-                    if iconFilename not in iconList:
-                        print('Channel {} icon not in icon directory with required name: "{}"'.format(mythChannel['ChanNum'], iconFilename))
+                # xmlChannel and mythChannel both have icons.
+                if not args.noStrictIcon:
+                    # comparing is expensive, so allow one to accept that icons are icons
+                    try:
+                        mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True).read()
+                    except requests.exceptions.RequestException:
+                        print('Channel {} icon cannot be retrieved from the backend'.format(mythChannel['ChanNum']))
+                        mythChannelIcon = b''
+                    mythChannelIconHash = hashlib.sha256(mythChannelIcon).hexdigest()
+                    try:
+                        xmlIcon = requests.get(xmlChannel['icon']).content
+                    except requests.exceptions.RequestException:
+                        print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['icon']))
+                        xmlIcon = b''
+                    xmlIconHash = hashlib.sha256(xmlIcon).hexdigest()
+                    if ((xmlIconHash != mythChannelIconHash) or (args.refreshIcons)):
+                        if (args.refreshIcons and (xmlIconHash == mythChannelIconHash)):
+                            print('Channel {} icon refresh forced'.format(mythChannel['ChanNum']))
+                        else:
+                            print('Channel {} icon differs from source'.format(mythChannel['ChanNum']))
                         if not args.noUpdateIcons:
-                            try:
-                                xmlIcon = requests.get(xmlChannel['icon']).content
-                            except requests.exceptions.RequestException:
-                                print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['icon']))
-                                xmlIcon = b''
-                            file = open(os.path.join(iconDir, iconFilename), 'wb')
-                            file.write(xmlIcon)
-                            file.close()
-                            data['Icon'] = iconFilename
-                            update = True
+                            iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
+                            downloadFileData={}
+                            downloadFileData['StorageGroup'] = 'ChannelIcons'
+                            downloadFileData['URL'] = xmlChannel['icon']
+                            if bool(s.Content('DownloadFile', downloadFileData)['bool']):
+                                data['Icon'] = iconFilename
+                                update = True
+                            else:
+                                print('   Channel {} icon download failed'.format(mythChannel['ChanNum']))
             if xmlChannel['freqid'] != mythChannel['FrequencyId']:
                 print('Channel {} with existing frequency id: "{}" has a revised frequency id: {}'.format(mythChannel['ChanNum'], mythChannel['FrequencyId'], xmlChannel['freqid']))
                 if not args.noUpdateFreqID:
