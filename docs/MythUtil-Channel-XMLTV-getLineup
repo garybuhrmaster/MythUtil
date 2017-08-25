@@ -6,6 +6,8 @@ a supported grabber
 
 
 usage: MythUtil-Channel-XMLTV-getLineup [-h] [--backend BACKEND] [--port PORT]
+                                        [--username USERNAME]
+                                        [--password PASSWORD]
                                         (--videosource-name SOURCENAME | --videosource-id SOURCEID)
                                         [--channel CHANNELINCLUDE [CHANNELINCLUDE ...]]
                                         [--exclude-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...]]
@@ -16,7 +18,7 @@ usage: MythUtil-Channel-XMLTV-getLineup [-h] [--backend BACKEND] [--port PORT]
                                         [--no-update-xmltvid]
                                         [--no-update-freqid]
                                         [--no-strict-icon-check]
-                                        [--refresh-icons] [--force-local]
+                                        [--refresh-icons]
                                         [file]
 
 positional arguments:
@@ -29,6 +31,8 @@ optional arguments:
                         localhost.
   --port PORT           the port to connect to on on the host. The default is
                         6544
+  --username USERNAME   the username to use for host authentication
+  --password PASSWORD   the password to use for host authentication
   --videosource-name SOURCENAME
                         the video source name
   --videosource-id SOURCEID
@@ -49,9 +53,6 @@ optional arguments:
                         do not check remote icon against local (bypass a
                         slow/expensive check)
   --refresh-icons       refresh all eligible icons
-  --force-local         override local host determination and force as local
-                        for icon updates
-
 
 
 

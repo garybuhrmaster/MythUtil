@@ -6,7 +6,8 @@ a recent generation HDHomeRun.
 
 
 usage: MythUtil-Channel-HDHR-channelCheck [-h] --hdhr HDHR [--backend BACKEND]
-                                          [--port PORT]
+                                          [--port PORT] [--username USERNAME]
+                                          [--password PASSWORD]
                                           (--videosource-name SOURCENAME | --videosource-id SOURCEID)
                                           [--channel CHANNELINCLUDE [CHANNELINCLUDE ...]]
                                           [--exclude-channel CHANNELEXCLUDE [CHANNELEXCLUDE ...]]
@@ -19,6 +20,8 @@ optional arguments:
                         localhost.
   --port PORT           the port to connect to on on the host. The default is
                         6544
+  --username USERNAME   the username to use for host authentication
+  --password PASSWORD   the password to use for host authentication
   --videosource-name SOURCENAME
                         the video source name
   --videosource-id SOURCEID
