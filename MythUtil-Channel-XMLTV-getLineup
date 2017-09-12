@@ -423,7 +423,7 @@ if __name__ == '__main__':
                 data['ATSCMinorChannel'] = 0
                 data['DefaultAuthority'] = ''
                 data['Format'] = 'Default'
-                data['visible'] = 1
+                data['visible'] = True
                 data['UseEIT'] = 0
                 data['MplexID'] = 0
                 data['ServiceID'] = 0
