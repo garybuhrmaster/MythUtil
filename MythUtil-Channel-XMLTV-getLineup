@@ -384,18 +384,17 @@ if __name__ == '__main__':
         if not found:
             print('Channel {}, callsign: "{}", name: "{}" is new'.format(xmlChannel['channum'], xmlChannel['callsign'], xmlChannel['name']))
             if args.add:
+                # Attempt to download icon (if not excluded)
                 iconFilename = ''
                 if not args.noUpdateIcons:
                     if xmlChannel['icon'] is not None:
-                        iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
                         downloadFileData={}
                         downloadFileData['StorageGroup'] = 'ChannelIcons'
                         downloadFileData['URL'] = xmlChannel['icon']
                         if bool(s.Content('DownloadFile', downloadFileData)['bool']):
-                          data['Icon'] = iconFilename
-                          update = True
+                            iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
                         else:
-                          print('   Channel {} icon download failed'.format(mythChannel['ChanNum']))
+                            print('   Channel {} icon download failed'.format(xmlChannel['channum']))
                 # We need to create a valid ChannelID:
                 try:
                     chanId = sourceId * 1000 + int(xmlChannel['channum'])
