@@ -21,7 +21,7 @@ class MythTVServices():
             self.session.auth = requests.auth.HTTPDigestAuth(username, password)
             self.request(service='Myth', api='version')
 
-    def request(self, service=None, api=None, data={}, method=None):
+    def request(self, service=None, api=None, data={}, method=None, stream=False):
         version = '0.28'
         headers = {
                     'User-Agent':'{} Python Services API Client'.format(version),
@@ -37,30 +37,34 @@ class MythTVServices():
             else:
                 method = 'get'
         if method == 'get':
-            response = self.session.get(url, headers=headers)
+            response = self.session.get(url, headers=headers, stream=stream)
         elif method == 'post':
-            response = self.session.post(url, headers=headers, data=data)
+            response = self.session.post(url, headers=headers, data=data, stream=stream)
         else:
             raise ValueError('method is not post or get: {}'.format(method))
         response.raise_for_status()
-        return response.json()
+        if stream:
+            response.raw.decode_content = True
+            return response.raw
+        else:
+            return response.json()
 
-    def Capture(self, api=None, data={}, method=None):
-        return self.request(service='Capture', api=api, data=data, method=method)
-    def Channel(self, api=None, data={}, method=None):
-        return self.request(service='Channel', api=api, data=data, method=method)
-    def Content(self, api=None, data={}, method=None):
-        return self.request(service='Content', api=api, data=data, method=method)
-    def Dvr(self, api=None, data={}, method=None):
-        return self.request(service='Dvr', api=api, data=data, method=method)
-    def Frontend(self, api=None, data={}, method=None):
-        return self.request(service='Frontend', api=api, data=data, method=method)
-    def Guide(self, api=None, data={}, method=None):
-        return self.request(service='Guide', api=api, data=data, method=method)
-    def Myth(self, api=None, data={}, method=None):
-        return self.request(service='Myth', api=api, data=data, method=method)
-    def Video(self, api=None, data={}, method=None):
-        return self.request(service='Video', api=api, data=data, method=method)
+    def Capture(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Capture', api=api, data=data, method=method, stream=stream)
+    def Channel(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Channel', api=api, data=data, method=method, stream=stream)
+    def Content(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Content', api=api, data=data, method=method, stream=stream)
+    def Dvr(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Dvr', api=api, data=data, method=method, stream=stream)
+    def Frontend(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Frontend', api=api, data=data, method=method, stream=stream)
+    def Guide(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Guide', api=api, data=data, method=method, stream=stream)
+    def Myth(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Myth', api=api, data=data, method=method, stream=stream)
+    def Video(self, api=None, data={}, method=None, stream=False):
+        return self.request(service='Video', api=api, data=data, method=method, stream=stream)
 
 def channelNormalize(channel):
     m0 = re.match('^(\d+)$', channel)
