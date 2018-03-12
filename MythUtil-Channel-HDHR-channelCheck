@@ -2,11 +2,11 @@
 
 import argparse
 import sys
-import requests
-import requests.auth
 import json
 import re
 import natsort
+import requests
+import requests.auth
 
 class MythTVServices():
     def __init__(self, host=None, port=None, username=None, password=None):
@@ -23,11 +23,9 @@ class MythTVServices():
 
     def request(self, service=None, api=None, data={}, method=None, stream=False):
         version = '0.28'
-        headers = {
-                    'User-Agent':'{} Python Services API Client'.format(version),
-                    'Accept':'application/json',
-                    'Accept-Encoding':'gzip,deflate'
-                  }
+        headers = {'User-Agent':'{} Python Services API Client'.format(version),
+                   'Accept':'application/json',
+                   'Accept-Encoding':'gzip,deflate'}
         if api is None:
             raise ValueError('api must be specified')
         url = 'http://{}:{}/{}/{}'.format(self.host, self.port, service, api)
@@ -102,9 +100,9 @@ if __name__ == '__main__':
                         help='the password to use for host authentication')
     sourcegroup = parser.add_mutually_exclusive_group(required=True)
     sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
-                        help='the video source name')
+                             help='the video source name')
     sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
-                        help='the video source id')
+                             help='the video source id')
     parser.add_argument('--channel', '--channels', '--include-channel', '--include-channels',
                         nargs='+', type=channelCheck, dest='channelInclude',
                         help='list of channels to consider.  The default is all')
@@ -118,7 +116,7 @@ if __name__ == '__main__':
     try:
         hostname = s.Myth('GetHostName')['String']
     except Exception:
-        print ('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
+        print('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
         sys.exit(1)
 
     # Validate sourceid/name
@@ -138,7 +136,7 @@ if __name__ == '__main__':
     try:
         hdhrLineup = requests.get('http://{}/lineup.json?show=all&tuning'.format(args.hdhr)).json()
     except Exception:
-        print ('Unable to obtain lineup from {}'.format(args.hdhr))
+        print('Unable to obtain lineup from {}'.format(args.hdhr))
         sys.exit(1)
     hdhrChannelList = {}
     for hdhrChannel in hdhrLineup:
@@ -178,10 +176,10 @@ if __name__ == '__main__':
             guidename = ''
             if 'GuideName' in hdhrChannel:
                 guidename = hdhrChannel['GuideName']
-            print ('Tuner channel {} ({}) not in MythTV channel database'.format(guidenumber, guidename))
+            print('Tuner channel {} ({}) not in MythTV channel database'.format(guidenumber, guidename))
 
     # Report on channels that (likely) should be deleted from MythTV
     mythChannelList = natsort.natsorted(mythChannelList, key=lambda c: c['ChanNum'])
     for mythChannel in mythChannelList:
         if mythChannel['FrequencyId']  not in hdhrChannelList:
-            print ('MythTV channel {} ({}) specifies tuner channel {} which is not available'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['FrequencyId']))
+            print('MythTV channel {} ({}) specifies tuner channel {} which is not available'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['FrequencyId']))

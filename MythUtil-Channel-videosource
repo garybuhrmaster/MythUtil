@@ -2,11 +2,11 @@
 
 import argparse
 import sys
-import requests
-import requests.auth
 import json
 import re
 import natsort
+import requests
+import requests.auth
 
 class MythTVServices():
     def __init__(self, host=None, port=None, username=None, password=None):
@@ -23,11 +23,9 @@ class MythTVServices():
 
     def request(self, service=None, api=None, data={}, method=None, stream=False):
         version = '0.28'
-        headers = {
-                    'User-Agent':'{} Python Services API Client'.format(version),
-                    'Accept':'application/json',
-                    'Accept-Encoding':'gzip,deflate'
-                  }
+        headers = {'User-Agent':'{} Python Services API Client'.format(version),
+                   'Accept':'application/json',
+                   'Accept-Encoding':'gzip,deflate'}
         if api is None:
             raise ValueError('api must be specified')
         url = 'http://{}:{}/{}/{}'.format(self.host, self.port, service, api)
@@ -69,42 +67,41 @@ class MythTVServices():
 def TrueOrFalse(arg):
     ua = str(arg).upper()
     if ua == 'TRUE'[:len(ua)]:
-       return True
+        return True
     elif ua == 'YES'[:len(ua)]:
-       return True
+        return True
     elif ua == '1':
-       return True
+        return True
     elif ua == 'FALSE'[:len(ua)]:
-       return False
+        return False
     elif ua == 'NO'[:len(ua)]:
-       return False
+        return False
     elif ua == '0':
-       return False
+        return False
     raise argparse.ArgumentTypeError('{} is not a valid true/false value'.format(arg))
 
 def FreqTable(arg):
-    frequencies = [ "default",
-                    "us-bcast",
-                    "us-cable",
-                    "us-cable-hrc",
-                    "us-cable-irc",
-                    "japan-bcast",
-                    "japan-cable",
-                    "europe-west",
-                    "europe-east",
-                    "italy",
-                    "newzealand",
-                    "australia",
-                    "ireland",
-                    "france",
-                    "china-bcast",
-                    "southafrica",
-                    "argentina",
-                    "australia-optus",
-                    "singapore",
-                    "malaysia",
-                    "israel-hot-matav"
-                  ]
+    frequencies = ["default",
+                   "us-bcast",
+                   "us-cable",
+                   "us-cable-hrc",
+                   "us-cable-irc",
+                   "japan-bcast",
+                   "japan-cable",
+                   "europe-west",
+                   "europe-east",
+                   "italy",
+                   "newzealand",
+                   "australia",
+                   "ireland",
+                   "france",
+                   "china-bcast",
+                   "southafrica",
+                   "argentina",
+                   "australia-optus",
+                   "singapore",
+                   "malaysia",
+                   "israel-hot-matav"]
     if arg in frequencies:
         return arg
     raise argparse.ArgumentTypeError('{} is not a valid frequency table value'.format(arg))
@@ -122,9 +119,9 @@ if __name__ == '__main__':
                         help='the password to use for host authentication')
     sourcegroup = parser.add_mutually_exclusive_group(required=False)
     sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
-                        help='the video source name')
+                             help='the video source name')
     sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
-                        help='the video source id')
+                             help='the video source id')
     actiongroup = parser.add_mutually_exclusive_group(required=False)
     actiongroup.add_argument('--add', action='store_true', default=False,
                              help='add a video source')
@@ -157,14 +154,14 @@ if __name__ == '__main__':
     try:
         hostname = s.Myth('GetHostName')['String']
     except Exception:
-        print ('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
+        print('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
         sys.exit(1)
 
     # If no action, just a list of video sources
     if (not args.add) and (not args.update) and (not args.delete):
         if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.grabberUserid is not None) or (args.grabberPassword is not None) or (args.sourceNameNew is not None):
             print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, grabber-userid, grabber-password, or new-videosource-name')
-            sys,exit(1)
+            sys.exit(1)
         mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
         print('Configured videosources:')
         for source in mythsl:
@@ -309,4 +306,3 @@ if __name__ == '__main__':
         else:
             print('Video source update failed')
             sys.exit(1)
-
