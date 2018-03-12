@@ -44,7 +44,7 @@ class MythTVServices():
             else:
                 method = 'get'
         if method == 'get':
-            response = self.session.get(url, headers=headers, stream=stream)
+            response = self.session.get(url, headers=headers, params=data, stream=stream)
         elif method == 'post':
             response = self.session.post(url, headers=headers, data=data, stream=stream)
         else:
