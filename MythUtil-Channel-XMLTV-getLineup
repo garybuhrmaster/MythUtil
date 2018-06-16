@@ -326,9 +326,15 @@ if __name__ == '__main__':
                 # xmlChannel and mythChannel both have icons.
                 if not args.noStrictIcon:
                     # comparing is expensive, so allow one to accept that icons are icons
-                    try:
-                        mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True).read()
-                    except requests.exceptions.RequestException:
+                    mythChannelIcon = None
+                    for attempt in range(2):
+                        try:
+                            mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True).read()
+                        except requests.exceptions.RequestException:
+                            mythChannelIcon = None
+                        else:
+                            break
+                    if mythChannelIcon == None:
                         print('Channel {} icon cannot be retrieved from the backend'.format(mythChannel['ChanNum']))
                         mythChannelIcon = b''
                     mythChannelIconHash = hashlib.sha256(mythChannelIcon).hexdigest()
