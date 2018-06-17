@@ -334,7 +334,7 @@ if __name__ == '__main__':
                             mythChannelIcon = None
                         else:
                             break
-                    if mythChannelIcon == None:
+                    if mythChannelIcon is None:
                         print('Channel {} icon cannot be retrieved from the backend'.format(mythChannel['ChanNum']))
                         mythChannelIcon = b''
                     mythChannelIconHash = hashlib.sha256(mythChannelIcon).hexdigest()
