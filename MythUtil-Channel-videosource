@@ -278,10 +278,6 @@ if __name__ == '__main__':
         v['NITId'] = source['NITId']
         if args.grabber is not None:
             v['Grabber'] = args.grabber
-            if not args.grabber in ['/bin/true', 'eitonly', 'schedulesdirect1']:
-                if args.config is None:
-                    confdir = s.Myth('GetBackendInfo')['BackendInfo']['Env']['MYTHCONFDIR']
-                    v['ConfigPath'] = confdir + '/' + args.sourceName + '.xmltv'
         if args.config is not None:
             v['ConfigPath'] = args.config
         if args.lineupid is not None:
