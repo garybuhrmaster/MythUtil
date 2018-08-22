@@ -189,7 +189,11 @@ if __name__ == '__main__':
 
     # Get channel list from get-lineup XML
     xmlLineup = []
-    tree = xml.etree.ElementTree.parse(args.file)
+    try:
+        tree = xml.etree.ElementTree.parse(args.file)
+    except xml.etree.ElementTree.ParseError:
+        print("Unable to parse input file")
+        sys.exit(1)
     root = tree.getroot()
     # Some file validation
     if root.tag != 'xmltv-lineups':
