@@ -176,10 +176,10 @@ if __name__ == '__main__':
             guidename = ''
             if 'GuideName' in hdhrChannel:
                 guidename = hdhrChannel['GuideName']
-            print('Tuner channel {} ({}) not in MythTV channel database'.format(guidenumber, guidename))
+            print('Tuner channel {} ({}) is not in the MythTV channel database'.format(guidenumber, guidename))
 
     # Report on channels that (likely) should be deleted from MythTV
     mythChannelList = natsort.natsorted(mythChannelList, key=lambda c: c['ChanNum'])
     for mythChannel in mythChannelList:
         if mythChannel['FrequencyId']  not in hdhrChannelList:
-            print('MythTV channel {} ({}) specifies tuner channel {} which is not available'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['FrequencyId']))
+            print('MythTV channel {} ({}) specifies a tuner channel {} which is not available'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['FrequencyId']))
