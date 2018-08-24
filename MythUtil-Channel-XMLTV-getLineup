@@ -276,7 +276,7 @@ if __name__ == '__main__':
                 found = True
                 break
         if not found:
-            print('Channel {}, callsign: "{}", name: "{}" are not in the XMLTV channel list'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['ChannelName']))
+            print('Channel {}, callsign: "{}", name: "{}" is not in the XMLTV channel list'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['ChannelName']))
             if args.delete:
                 data = {}
                 data['ChannelID'] = mythChannel['ChanId']
