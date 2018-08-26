@@ -109,6 +109,8 @@ if __name__ == '__main__':
     parser.add_argument('--exclude-channel', '--exclude-channels', '--no-channel', '--no-channels',
                         nargs='+', type=channelCheck, dest='channelExclude',
                         help='list of channels to exclude.  The default is none')
+    parser.add_argument('--include-demo-channels', action='store_true', default=False, dest='includeDemo',
+                        help='include demo channels on HDHR')
     args = parser.parse_args()
 
     s = MythTVServices(args.backend, args.port, args.username, args.password)
@@ -142,6 +144,9 @@ if __name__ == '__main__':
     for hdhrChannel in hdhrLineup:
         if 'GuideNumber' not in hdhrChannel:
             continue
+        if 'Demo' in hdhrChannel:
+            if bool(hdhrChannel['Demo']) and not args.includeDemo:
+                continue
         guidenumber = channelNormalize(hdhrChannel['GuideNumber'])
         if args.channelInclude is not None:
             if guidenumber not in args.channelInclude:
