@@ -233,6 +233,8 @@ if __name__ == '__main__':
         freqid = channum
         if lineupEntry.find('stb-channel/stb-preset') is not None:
             freqid = lineupEntry.find('stb-channel/stb-preset').text
+        if lineupEntry.find('atsc-channel/number') is not None:
+            freqid = lineupEntry.find('atsc-channel/number').text
 
         # Validate the lineup entry for the type, skip ill-defined entries
         if lineupType == 'STB':
