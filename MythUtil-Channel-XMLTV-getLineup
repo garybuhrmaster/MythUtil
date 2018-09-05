@@ -199,74 +199,75 @@ if __name__ == '__main__':
     if root.tag != 'xmltv-lineups':
         print('The XMLTV get-linup file does not appear to be valid (root element is not xmltv-lineups)')
         sys.exit(1)
-    if (len(list(root.iter('xmltv-lineup')))) != 1:
-        print('The XMLTV get-lineup file does not appear to be valid (does not have one xmltv-lineup)')
-        sys.exit(1)
-    lineup = root.find('xmltv-lineup')
-    lineupType = None
-    if lineup.find('type') is not None:
-        lineupType = lineup.find('type').text
-    if lineupType not in ['STB', 'DTV']:
-        print('The XMLTV get-lineup file does not specify a supported type: {}'.format(lineupType))
-        sys.exit(1)
-    if lineupType in ['DTV']:                              # Future support for DVB/ATSC?
-        print('The XMLTV get-lineup type ({}) has limited support'.format(lineupType))
 
-    for lineupEntry in lineup.iter('lineup-entry'):
-        channum = None
-        xmltvid = None
-        callsign = None
-        name = None
-        icon = None
-        freqid = None
-        if lineupEntry.find('preset') is not None:
-            channum = lineupEntry.find('preset').text
-        lineupStation = lineupEntry.find('station')
-        if lineupStation is not None:
-            xmltvid = lineupStation.get('rfc2838', default=None)
-            if lineupStation.find('name') is not None:
-                name = lineupStation.find('name').text
-            if lineupStation.find('short-name') is not None:
-                callsign = lineupStation.find('short-name').text
-            if lineupStation.find('logo') is not None:
-                icon = lineupStation.find('logo').get('url', default=None)
-        freqid = channum
-        if lineupEntry.find('stb-channel/stb-preset') is not None:
-            freqid = lineupEntry.find('stb-channel/stb-preset').text
-        if lineupEntry.find('atsc-channel/number') is not None:
-            freqid = lineupEntry.find('atsc-channel/number').text
+    for lineup in root.iter('xmltv-lineup'):
+        lineupName = lineup.get('id')
+        lineupType = None
+        if lineup.find('type') is not None:
+            lineupType = lineup.find('type').text
+        if lineupType not in ['STB', 'DTV']:
+            print('The XMLTV get-lineup file does not specify a supported type ({}) for lineup {}'.format(lineupType, lineupName))
+            sys.exit(1)
+        if lineupType in ['DTV']:                              # Future support for DVB/ATSC?
+            print('The XMLTV get-lineup type ({}) for lineup {} has limited support'.format(lineupType, lineupName))
 
-        # Validate the lineup entry for the type, skip ill-defined entries
-        if lineupType == 'STB':
+    for lineup in root.iter('xmltv-lineup'):
+        for lineupEntry in lineup.iter('lineup-entry'):
+            channum = None
+            xmltvid = None
+            callsign = None
+            name = None
+            icon = None
+            freqid = None
+            if lineupEntry.find('preset') is not None:
+                channum = lineupEntry.find('preset').text
+            lineupStation = lineupEntry.find('station')
+            if lineupStation is not None:
+                xmltvid = lineupStation.get('rfc2838', default=None)
+                if lineupStation.find('name') is not None:
+                    name = lineupStation.find('name').text
+                if lineupStation.find('short-name') is not None:
+                    callsign = lineupStation.find('short-name').text
+                if lineupStation.find('logo') is not None:
+                    icon = lineupStation.find('logo').get('url', default=None)
+            freqid = channum
+            if lineupEntry.find('stb-channel/stb-preset') is not None:
+                freqid = lineupEntry.find('stb-channel/stb-preset').text
+            if lineupEntry.find('atsc-channel/number') is not None:
+                freqid = lineupEntry.find('atsc-channel/number').text
+
+            # reject some malformed lineup entries
             if (freqid is None) or (freqid == ''):
                 continue
             if (channum is None) or (channum == ''):
                 continue
 
-        if lineupType == 'DTV':
-            if (freqid is None) or (freqid == ''):
-                continue
-            if (channum is None) or (channum == ''):
-                continue
+            channum = channelNormalize(channum)
+            freqid = channelNormalize(freqid)
+            if args.channelInclude is not None:
+                if channum not in args.channelInclude:
+                    continue
+            if args.channelExclude is not None:
+                if channum in args.channelExclude:
+                    continue
 
-        channum = channelNormalize(channum)
-        freqid = channelNormalize(freqid)
-        if args.channelInclude is not None:
-            if channum not in args.channelInclude:
-                continue
-        if args.channelExclude is not None:
-            if channum in args.channelExclude:
-                continue
+            c = {}
+            c['channum'] = channum
+            c['xmltvid'] = xmltvid
+            c['freqid'] = freqid
+            c['name'] = name
+            c['callsign'] = callsign
+            c['icon'] = icon
 
-        c = {}
-        c['channum'] = channum
-        c['xmltvid'] = xmltvid
-        c['freqid'] = freqid
-        c['name'] = name
-        c['callsign'] = callsign
-        c['icon'] = icon
+            # Don't add duplicates (more common when mixing OTA DX'ers lineups?)
+            for xmlChannel in xmlLineup:
+                if (xmlChannel['channum'] == channum) and (xmlChannel['xmltvid'] == xmltvid) and \
+                    (xmlChannel['freqid'] == freqid) and (xmlChannel['name'] == name) and \
+                    (xmlChannel['callsign'] == callsign) and (xmlChannel['icon'] == icon):
+                    print(xmlChannel)
+                    continue
 
-        xmlLineup.append(c)
+            xmlLineup.append(c)
 
     xmlLineup = natsort.natsorted(xmlLineup, key=lambda c: c['freqid'])
 
