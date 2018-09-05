@@ -264,7 +264,6 @@ if __name__ == '__main__':
                 if (xmlChannel['channum'] == channum) and (xmlChannel['xmltvid'] == xmltvid) and \
                     (xmlChannel['freqid'] == freqid) and (xmlChannel['name'] == name) and \
                     (xmlChannel['callsign'] == callsign) and (xmlChannel['icon'] == icon):
-                    print(xmlChannel)
                     continue
 
             xmlLineup.append(c)
