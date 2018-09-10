@@ -438,6 +438,29 @@ if __name__ == '__main__':
                 data['ServiceID'] = 0
                 if bool(s.Channel('AddDBChannel', data)['bool']):
                     print('  Channel {} added'.format(xmlChannel['channum']))
+                    mythChannel = {}
+                    mythChannel['ATSCMajorChan']  = data['ATSCMajorChannel']
+                    mythChannel['ATSCMinorChan']  = data['ATSCMinorChannel']
+                    mythChannel['ChanId']         = data['ChannelID']
+                    mythChannel['ChannelName']    = data['ChannelName']
+                    mythChannel['CallSign']       = data['CallSign']
+                    mythChannel['MplexId']        = data['MplexID']
+                    mythChannel['ServiceId']      = data['ServiceID']
+                    mythChannel['SourceId']       = data['SourceID']
+                    mythChannel['UseEIT']         = data['UseEIT']
+                    mythChannel['Visible']        = data['visible']
+                    mythChannel['IconURL']        = data['Icon']
+                    mythChannel['Format']         = data['Format']
+                    mythChannel['ChanNum']        = data['ChannelNumber']
+                    mythChannel['FrequencyId']    = data['FrequencyID']
+                    mythChannel['FineTune']       = 0
+                    mythChannel['XMLTVID']        = data['XMLTVID']
+                    mythChannel['ChanFilters']    = ''
+                    mythChannel['InputId']        = 0
+                    mythChannel['CommFree']       = False
+                    mythChannel['DefaultAuth']    = ''
+                    mythChannel['Programs']       = []
+                    mythChannelList.append(mythChannel)
                 else:
                     print('  Channel {} addition failed'.format(xmlChannel['channum']))
 
