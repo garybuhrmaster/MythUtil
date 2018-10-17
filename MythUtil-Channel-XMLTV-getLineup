@@ -407,9 +407,9 @@ if __name__ == '__main__':
                             print('   Channel {} icon download failed'.format(xmlChannel['channum']))
                 # We need to create a valid ChannelID:
                 try:
-                    chanId = sourceId * 1000 + int(xmlChannel['channum'])
+                    chanId = sourceId * 10000 + int(xmlChannel['channum'])
                 except Exception:
-                    chanId = sourceId * 1000
+                    chanId = sourceId * 10000
                 while True:
                     try:
                         data = {}
