@@ -299,16 +299,23 @@ if __name__ == '__main__':
             # Create update object (for some reason the
             # names are not the same as a get)?
             data = {}
-            # Mandatory
+            # Copy existing values
+            data['MplexID']            = mythChannel['MplexId']
+            data['SourceID']           = mythChannel['SourceId']
+            data['ChannelID']          = mythChannel['ChanId']
+            data['CallSign']           = mythChannel['CallSign']
+            data['ChannelName']        = mythChannel['ChannelName']
+            data['ChannelNumber']      = mythChannel['ChanNum']
+            data['ServiceID']          = mythChannel['ServiceId']
             data['ATSCMajorChannel']   = mythChannel['ATSCMajorChan']
             data['ATSCMinorChannel']   = mythChannel['ATSCMinorChan']
-            data['ChannelID']          = mythChannel['ChanId']
-            data['ChannelName']        = mythChannel['ChannelName']
-            data['CallSign']           = mythChannel['CallSign']
-            data['MplexID']            = mythChannel['MplexId']
-            data['ServiceID']          = mythChannel['ServiceId']
-            data['SourceID']           = mythChannel['SourceId']
             data['UseEIT']             = mythChannel['UseEIT']
+            data['visible']            = mythChannel['Visible']
+            data['FrequencyID']        = mythChannel['FrequencyId']
+            data['Icon']               = mythChannel['IconURL']
+            data['Format']             = mythChannel['Format']
+            data['XMLTVID']            = mythChannel['XMLTVID']
+            data['DefaultAuthority']   = mythChannel['DefaultAuth']
             if (xmlChannel['icon'] is None) and (mythChannel['IconURL'] == ''):
                 pass           # Nothing to see here
             elif (xmlChannel['icon'] is not None) and (mythChannel['IconURL'] == ''):
