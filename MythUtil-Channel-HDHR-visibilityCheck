@@ -103,10 +103,10 @@ if __name__ == '__main__':
                              help='the video source name')
     sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
                              help='the video source id')
-    parser.add_argument('--channel', '--channels', '--include-channel', '--include-channels', 
+    parser.add_argument('--channel', '--channels', '--include-channel', '--include-channels',
                         nargs='+', type=channelCheck, dest='channelInclude',
                         help='list of channels to consider.  The default is all')
-    parser.add_argument('--exclude-channel', '--exclude-channels', '--no-channel', '--no-channels', 
+    parser.add_argument('--exclude-channel', '--exclude-channels', '--no-channel', '--no-channels',
                         nargs='+', type=channelCheck, dest='channelExclude',
                         help='list of channels to exclude.  The default is none')
     parser.add_argument('--include-demo-channels', action='store_true', default=False, dest='includeDemo',
