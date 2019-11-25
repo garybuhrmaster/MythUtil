@@ -65,10 +65,10 @@ class MythTVServices():
         return self.request(service='Video', api=api, data=data, method=method, stream=stream)
 
 def channelNormalize(channel):
-    m0 = re.match('^(\d+)$', channel)
-    m1 = re.match('^(\d+)\.(\d+)$', channel)
-    m2 = re.match('^(\d+)_(\d+)$', channel)
-    m3 = re.match('^(\d+)-(\d+)$', channel)
+    m0 = re.match(r'^(\d+)$', channel)
+    m1 = re.match(r'^(\d+)\.(\d+)$', channel)
+    m2 = re.match(r'^(\d+)_(\d+)$', channel)
+    m3 = re.match(r'^(\d+)-(\d+)$', channel)
     if m0:
         return '{}'.format(int(m0.group(1)))
     elif m1:
