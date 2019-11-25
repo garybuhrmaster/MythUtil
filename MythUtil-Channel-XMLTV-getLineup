@@ -354,7 +354,7 @@ if __name__ == '__main__':
                     try:
                         xmlIcon = requests.get(xmlChannel['icon']).content
                     except requests.exceptions.RequestException:
-                        print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['channum'])
+                        print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['channum']))
                         xmlIcon = b''
                     xmlIconHash = hashlib.sha256(xmlIcon).hexdigest()
                     if (xmlIconHash != mythChannelIconHash) or (args.refreshIcons):
