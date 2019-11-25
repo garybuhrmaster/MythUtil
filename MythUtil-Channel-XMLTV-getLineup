@@ -105,6 +105,9 @@ def isWritable(path):
         raise
     return True
 
+def versionTuple(v):
+    return tuple(map(int, (v.split("."))))
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -157,6 +160,8 @@ if __name__ == '__main__':
     except Exception:
         print('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
         sys.exit(1)
+
+    ChannelServiceVersion = versionTuple(s.Channel('version')['String'])
 
     # Validate sourceid/name
     mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']

@@ -106,6 +106,9 @@ def FreqTable(arg):
         return arg
     raise argparse.ArgumentTypeError('{} is not a valid frequency table value'.format(arg))
 
+def versionTuple(v):
+    return tuple(map(int, (v.split("."))))
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -156,6 +159,8 @@ if __name__ == '__main__':
     except Exception:
         print('Unable to obtain hostname from host {}:{}'.format(args.backend, args.port))
         sys.exit(1)
+
+    ChannelServiceVersion = versionTuple(s.Channel('version')['String'])
 
     # If no action, just a list of video sources
     if (not args.add) and (not args.update) and (not args.delete):
