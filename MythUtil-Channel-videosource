@@ -80,32 +80,6 @@ def TrueOrFalse(arg):
         return False
     raise argparse.ArgumentTypeError('{} is not a valid true/false value'.format(arg))
 
-def FreqTable(arg):
-    frequencies = ["default",
-                   "us-bcast",
-                   "us-cable",
-                   "us-cable-hrc",
-                   "us-cable-irc",
-                   "japan-bcast",
-                   "japan-cable",
-                   "europe-west",
-                   "europe-east",
-                   "italy",
-                   "newzealand",
-                   "australia",
-                   "ireland",
-                   "france",
-                   "china-bcast",
-                   "southafrica",
-                   "argentina",
-                   "australia-optus",
-                   "singapore",
-                   "malaysia",
-                   "israel-hot-matav"]
-    if arg in frequencies:
-        return arg
-    raise argparse.ArgumentTypeError('{} is not a valid frequency table value'.format(arg))
-
 def versionTuple(v):
     return tuple(map(int, (v.split("."))))
 
@@ -140,7 +114,13 @@ if __name__ == '__main__':
                         help='use eit for guide')
     parser.add_argument('--network-id', action='store', type=int, dest='networkId',
                         help='provider specific network id')
-    parser.add_argument('--frequency-table', default=None, type=FreqTable, dest='freqTable',
+    parser.add_argument('--frequency-table', default=None, type=str.lower, dest='freqTable',
+                        choices=["default", "us-bcast", "us-cable", "us-cable-hrc",
+                                 "us-cable-irc", "japan-bcast", "japan-cable", "europe-west",
+                                 "europe-east", "italy", "newzealand", "australia", "ireland",
+                                 "france", "china-bcast", "southafrica", "argentina",
+                                 "australia-optus", "singapore", "malaysia",
+                                 "israel-hot-matav"],
                         help='frequency table to use')
     parser.add_argument('--grabber-userid', action='store', type=str, dest='grabberUserid',
                         help='userid for schedulesdirect1 (internal) grabber')
