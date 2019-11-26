@@ -80,6 +80,15 @@ def TrueOrFalse(arg):
         return False
     raise argparse.ArgumentTypeError('{} is not a valid true/false value'.format(arg))
 
+def unsignedInt(v):
+    try:
+        v = int(v)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
+    if v < 0:
+        raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
+    return v
+
 def versionTuple(v):
     return tuple(map(int, (v.split("."))))
 
@@ -113,7 +122,13 @@ if __name__ == '__main__':
     parser.add_argument('--use-eit', default=None, dest='useEIT', type=TrueOrFalse,
                         help='use eit for guide')
     parser.add_argument('--network-id', action='store', type=int, dest='networkId',
-                        help='provider specific network id')
+                        help='provider network id')
+    parser.add_argument('--bouquet-id', action='store', type=unsignedInt, dest='bouquetId',
+                        help='provider bouquet id')
+    parser.add_argument('--region-id', action='store', type=unsignedInt, dest='regionId',
+                        help='provider region id')
+    parser.add_argument('--scan-frequency', action='store', type=unsignedInt, dest='scanFreq',
+                        help='provider start scan frequency')
     parser.add_argument('--frequency-table', default=None, type=str.lower, dest='freqTable',
                         choices=["default", "us-bcast", "us-cable", "us-cable-hrc",
                                  "us-cable-irc", "japan-bcast", "japan-cable", "europe-west",
@@ -144,8 +159,8 @@ if __name__ == '__main__':
 
     # If no action, just a list of video sources
     if (not args.add) and (not args.update) and (not args.delete):
-        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.grabberUserid is not None) or (args.grabberPassword is not None) or (args.sourceNameNew is not None):
-            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, grabber-userid, grabber-password, or new-videosource-name')
+        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.grabberUserid is not None) or (args.grabberPassword is not None) or (args.bouquetId is not None) or (args.regionId is not None) or (args.scanFreq is not None) or (args.sourceNameNew is not None):
+            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, grabber-userid, grabber-password, bouquet-id, region-id, scan-frequency, or new-videosource-name')
             sys.exit(1)
         mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
         print('Configured videosources:')
@@ -162,6 +177,10 @@ if __name__ == '__main__':
             print('    userid:    {}'.format(source['UserId']))
             print('    password:  {}'.format(source['Password']))
             print('    lineupid:  {}'.format(source['LineupId']))
+            if ChannelServiceVersion >= versionTuple("1.8"):
+                print('    BouquetID: {}'.format(source['BouquetId']))
+                print('    ReqionID:  {}'.format(source['RegionId']))
+                print('    ScanFreq:  {}'.format(source['ScanFrequency']))
         sys.exit(1)
 
     # Try to locate source name/id if specified
@@ -192,6 +211,9 @@ if __name__ == '__main__':
         v['FreqTable'] = 'default'
         v['UseEIT'] = False
         v['NITId'] = -1
+        v['BouquetId'] = 0
+        v['RegionId'] = 0
+        v['ScanFrequency'] = 0
         if args.grabber is not None:
             v['Grabber'] = args.grabber
             if not args.grabber in ['/bin/true', 'eitonly', 'schedulesdirect1']:
@@ -212,6 +234,18 @@ if __name__ == '__main__':
             v['FreqTable'] = args.freqTable
         if args.networkId is not None:
             v['NITId'] = args.networkId
+        if args.bouquetId is not None:
+            if ChannelServiceVersion < versionTuple("1.8"):
+                print("Warning: backend version does not support bouquet-id")
+            v['BouquetId'] = args.bouquetId
+        if args.regionId is not None:
+            if ChannelServiceVersion < versionTuple("1.8"):
+                print("Warning: backend version does not support region-id")
+            v['RegionId'] = args.regionId
+        if args.scanFreq is not None:
+            if ChannelServiceVersion < versionTuple("1.8"):
+                print("Warning: backend version does not support scan-frequency")
+            v['ScanFrequency'] = args.scanFreq
         if int(s.Channel('AddVideoSource', v)['int']) > 0:
             print('Video source added')
             try:
@@ -261,6 +295,9 @@ if __name__ == '__main__':
         v['FreqTable'] = source['FreqTable']
         v['UseEIT'] = source['UseEIT']
         v['NITId'] = source['NITId']
+        v['BouquetId'] = source['BouquetId']
+        v['RegionId'] = source['RegionId']
+        v['ScanFrequency'] = source['ScanFrequency']
         if args.grabber is not None:
             v['Grabber'] = args.grabber
         if args.config is not None:
@@ -277,6 +314,18 @@ if __name__ == '__main__':
             v['FreqTable'] = args.freqTable
         if args.networkId is not None:
             v['NITId'] = args.networkId
+        if args.bouquetId is not None:
+            if ChannelServiceVersion < versionTuple("1.8"):
+                print("Warning: backend version does not support bouquet-id")
+            v['BouquetId'] = args.bouquetId
+        if args.regionId is not None:
+            if ChannelServiceVersion < versionTuple("1.8"):
+                print("Warning: backend version does not support region-id")
+            v['RegionId'] = args.regionId
+        if args.scanFreq is not None:
+            if ChannelServiceVersion < versionTuple("1.8"):
+                print("Warning: backend version does not support scan-frequency")
+            v['ScanFrequency'] = args.scanFreq
         if bool(s.Channel('UpdateVideoSource', v)['bool']):
             print('Video source updated')
             try:
