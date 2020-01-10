@@ -204,10 +204,10 @@ if __name__ == '__main__':
         v = {}
         v['SourceName'] = args.sourceName
         v['Grabber'] = '/bin/true'
-#       v['ConfigPath'] = None
-#       v['LineupId'] = None
-        v['UserId'] = ''
-#       v['Password'] = None
+        v['ConfigPath'] = None
+        v['LineupId'] = None
+        v['UserId'] = None
+        v['Password'] = None
         v['FreqTable'] = 'default'
         v['UseEIT'] = False
         v['NITId'] = -1
@@ -215,11 +215,9 @@ if __name__ == '__main__':
         v['RegionId'] = 0
         v['ScanFrequency'] = 0
         if args.grabber is not None:
+            if (ChannelServiceVersion >= versionTuple("1.8")) and (args.grabber in ['schedulesdirect1', 'datadirect']):
+                print("Warning: backend version no longer supports the internal Schedules Direct grabber")
             v['Grabber'] = args.grabber
-            if not args.grabber in ['/bin/true', 'eitonly', 'schedulesdirect1']:
-                if args.config is None:
-                    confdir = s.Myth('GetBackendInfo')['BackendInfo']['Env']['MYTHCONFDIR']
-                    v['ConfigPath'] = confdir + '/' + args.sourceName + '.xmltv'
         if args.config is not None:
             v['ConfigPath'] = args.config
         if args.lineupid is not None:
@@ -298,7 +296,11 @@ if __name__ == '__main__':
         v['BouquetId'] = source['BouquetId']
         v['RegionId'] = source['RegionId']
         v['ScanFrequency'] = source['ScanFrequency']
+        if args.sourceNameNew is not None:
+            v['SourceName'] = args.sourceNameNew
         if args.grabber is not None:
+            if (ChannelServiceVersion >= versionTuple("1.8")) and (args.grabber in ['schedulesdirect1', 'datadirect']):
+                print("Warning: backend version no longer supports the internal Schedules Direct grabber")
             v['Grabber'] = args.grabber
         if args.config is not None:
             v['ConfigPath'] = args.config
