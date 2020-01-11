@@ -161,7 +161,6 @@ if __name__ == '__main__':
     mythChannelList = natsort.natsorted(mythChannelList, key=lambda c: c['ChanNum'])
     for mythChannel in mythChannelList:
         chanNum = mythChannel['ChanNum']
-        freqId = mythChannel['FrequencyId']
         mvisible = bool(mythChannel['Visible'] == 'true')
         desiredvisible = mvisible
         if args.forcevisible:
