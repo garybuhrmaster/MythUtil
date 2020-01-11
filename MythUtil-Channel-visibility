@@ -196,6 +196,10 @@ if __name__ == '__main__':
                     print('  Channel {} updated'.format(chanNum))
                 else:
                     print('  Channel {} update failed'.format(chanNum))
+            else:
+                print('   Channel {} update not requested'.format(chanNum))
+        else:
+            print('Channel {} visibility currently set to {}'.format(chanNum, mvisible))
 
     if args.update:
         try:
