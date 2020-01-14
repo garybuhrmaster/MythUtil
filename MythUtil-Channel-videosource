@@ -201,50 +201,50 @@ if __name__ == '__main__':
         if sourceId is not None:
             print('Video source already exists with that name')
             sys.exit(1)
-        v = {}
-        v['SourceName'] = args.sourceName
-        v['Grabber'] = '/bin/true'
-        v['ConfigPath'] = None
-        v['LineupId'] = None
-        v['UserId'] = None
-        v['Password'] = None
-        v['FreqTable'] = 'default'
-        v['UseEIT'] = False
-        v['NITId'] = -1
-        v['BouquetId'] = 0
-        v['RegionId'] = 0
-        v['ScanFrequency'] = 0
+        data = {}
+        data['SourceName'] = args.sourceName
+        data['Grabber'] = '/bin/true'
+        data['ConfigPath'] = None
+        data['LineupId'] = None
+        data['UserId'] = None
+        data['Password'] = None
+        data['FreqTable'] = 'default'
+        data['UseEIT'] = False
+        data['NITId'] = -1
+        data['BouquetId'] = 0
+        data['RegionId'] = 0
+        data['ScanFrequency'] = 0
         if args.grabber is not None:
             if (ChannelServiceVersion >= versionTuple("1.8")) and (args.grabber in ['schedulesdirect1', 'datadirect']):
                 print("Warning: backend version no longer supports the internal Schedules Direct grabber")
-            v['Grabber'] = args.grabber
+            data['Grabber'] = args.grabber
         if args.config is not None:
-            v['ConfigPath'] = args.config
+            data['ConfigPath'] = args.config
         if args.lineupid is not None:
-            v['LineupId'] = args.lineupid
+            data['LineupId'] = args.lineupid
         if args.grabberUserid is not None:
-            v['UserId'] = args.grabberUserid
+            data['UserId'] = args.grabberUserid
         if args.grabberPassword is not None:
-            v['Password'] = args.grabberPassword
+            data['Password'] = args.grabberPassword
         if args.useEIT is not None:
-            v['UseEIT'] = args.useEIT
+            data['UseEIT'] = args.useEIT
         if args.freqTable is not None:
-            v['FreqTable'] = args.freqTable
+            data['FreqTable'] = args.freqTable
         if args.networkId is not None:
-            v['NITId'] = args.networkId
+            data['NITId'] = args.networkId
         if args.bouquetId is not None:
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support bouquet-id")
-            v['BouquetId'] = args.bouquetId
+            data['BouquetId'] = args.bouquetId
         if args.regionId is not None:
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support region-id")
-            v['RegionId'] = args.regionId
+            data['RegionId'] = args.regionId
         if args.scanFreq is not None:
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support scan-frequency")
-            v['ScanFrequency'] = args.scanFreq
-        if int(s.Channel('AddVideoSource', v)['int']) > 0:
+            data['ScanFrequency'] = args.scanFreq
+        if int(s.Channel('AddVideoSource', data)['int']) > 0:
             print('Video source added')
             try:
                 s.Dvr('RescheduleRecordings')
@@ -262,9 +262,9 @@ if __name__ == '__main__':
         if sourceId is None:
             print('Video source was not found to delete')
             sys.exit(1)
-        v = {}
-        v['SourceID'] = sourceId
-        if bool(s.Channel('RemoveVideoSource', v)['bool']):
+        data = {}
+        data['SourceID'] = sourceId
+        if bool(s.Channel('RemoveVideoSource', data)['bool']):
             print('Video source deleted')
             try:
                 s.Dvr('RescheduleRecordings')
@@ -282,53 +282,53 @@ if __name__ == '__main__':
         if sourceId is None:
             print('Video source was not found to update')
             sys.exit(1)
-        v = {}
-        v['SourceID'] = sourceId
-        v['SourceName'] = source['SourceName']
-        v['Grabber'] = source['Grabber']
-        v['ConfigPath'] = source['ConfigPath']
-        v['LineupId'] = source['LineupId']
-        v['UserId'] = source['UserId']
-        v['Password'] = source['Password']
-        v['FreqTable'] = source['FreqTable']
-        v['UseEIT'] = source['UseEIT']
-        v['NITId'] = source['NITId']
-        v['BouquetId'] = source['BouquetId']
-        v['RegionId'] = source['RegionId']
-        v['ScanFrequency'] = source['ScanFrequency']
+        data = {}
+        data['SourceID'] = sourceId
+        data['SourceName'] = source['SourceName']
+        data['Grabber'] = source['Grabber']
+        data['ConfigPath'] = source['ConfigPath']
+        data['LineupId'] = source['LineupId']
+        data['UserId'] = source['UserId']
+        data['Password'] = source['Password']
+        data['FreqTable'] = source['FreqTable']
+        data['UseEIT'] = source['UseEIT']
+        data['NITId'] = source['NITId']
+        data['BouquetId'] = source['BouquetId']
+        data['RegionId'] = source['RegionId']
+        data['ScanFrequency'] = source['ScanFrequency']
         if args.sourceNameNew is not None:
-            v['SourceName'] = args.sourceNameNew
+            data['SourceName'] = args.sourceNameNew
         if args.grabber is not None:
             if (ChannelServiceVersion >= versionTuple("1.8")) and (args.grabber in ['schedulesdirect1', 'datadirect']):
                 print("Warning: backend version no longer supports the internal Schedules Direct grabber")
-            v['Grabber'] = args.grabber
+            data['Grabber'] = args.grabber
         if args.config is not None:
-            v['ConfigPath'] = args.config
+            data['ConfigPath'] = args.config
         if args.lineupid is not None:
-            v['LineupId'] = args.lineupid
+            data['LineupId'] = args.lineupid
         if args.grabberUserid is not None:
-            v['UserId'] = args.grabberUserid
+            data['UserId'] = args.grabberUserid
         if args.grabberPassword is not None:
-            v['Password'] = args.grabberPassword
+            data['Password'] = args.grabberPassword
         if args.useEIT is not None:
-            v['UseEIT'] = args.useEIT
+            data['UseEIT'] = args.useEIT
         if args.freqTable is not None:
-            v['FreqTable'] = args.freqTable
+            data['FreqTable'] = args.freqTable
         if args.networkId is not None:
-            v['NITId'] = args.networkId
+            data['NITId'] = args.networkId
         if args.bouquetId is not None:
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support bouquet-id")
-            v['BouquetId'] = args.bouquetId
+            data['BouquetId'] = args.bouquetId
         if args.regionId is not None:
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support region-id")
-            v['RegionId'] = args.regionId
+            data['RegionId'] = args.regionId
         if args.scanFreq is not None:
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support scan-frequency")
-            v['ScanFrequency'] = args.scanFreq
-        if bool(s.Channel('UpdateVideoSource', v)['bool']):
+            data['ScanFrequency'] = args.scanFreq
+        if bool(s.Channel('UpdateVideoSource', data)['bool']):
             print('Video source updated')
             try:
                 s.Dvr('RescheduleRecordings')
