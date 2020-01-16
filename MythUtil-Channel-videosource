@@ -274,7 +274,7 @@ if __name__ == '__main__':
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support scan-frequency")
             data['ScanFrequency'] = args.scanFreq
-        if int(s.Channel('AddVideoSource', data)['int']) > 0:
+        if int(s.Channel('AddVideoSource', transformAPIElementNames('VideoSource', data))['int']) > 0:
             print('Video source added')
             try:
                 s.Dvr('RescheduleRecordings')
@@ -292,9 +292,8 @@ if __name__ == '__main__':
         if sourceId is None:
             print('Video source was not found to delete')
             sys.exit(1)
-        data = {}
-        data['SourceID'] = sourceId
-        if bool(s.Channel('RemoveVideoSource', data)['bool']):
+        data = source.copy()
+        if bool(s.Channel('RemoveVideoSource', transformAPIElementNames('VideoSource', data))['bool']):
             print('Video source deleted')
             try:
                 s.Dvr('RescheduleRecordings')
@@ -312,20 +311,7 @@ if __name__ == '__main__':
         if sourceId is None:
             print('Video source was not found to update')
             sys.exit(1)
-        data = {}
-        data['SourceID'] = sourceId
-        data['SourceName'] = source['SourceName']
-        data['Grabber'] = source['Grabber']
-        data['ConfigPath'] = source['ConfigPath']
-        data['LineupId'] = source['LineupId']
-        data['UserId'] = source['UserId']
-        data['Password'] = source['Password']
-        data['FreqTable'] = source['FreqTable']
-        data['UseEIT'] = source['UseEIT']
-        data['NITId'] = source['NITId']
-        data['BouquetId'] = source['BouquetId']
-        data['RegionId'] = source['RegionId']
-        data['ScanFrequency'] = source['ScanFrequency']
+        data = source.copy()
         if args.sourceNameNew is not None:
             data['SourceName'] = args.sourceNameNew
         if args.grabber is not None:
@@ -358,7 +344,7 @@ if __name__ == '__main__':
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support scan-frequency")
             data['ScanFrequency'] = args.scanFreq
-        if bool(s.Channel('UpdateVideoSource', data)['bool']):
+        if bool(s.Channel('UpdateVideoSource', transformAPIElementNames('VideoSource', data))['bool']):
             print('Video source updated')
             try:
                 s.Dvr('RescheduleRecordings')
