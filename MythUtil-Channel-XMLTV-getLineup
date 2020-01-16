@@ -108,6 +108,36 @@ def isWritable(path):
 def versionTuple(v):
     return tuple(map(int, (v.split("."))))
 
+def transformAPIElementNames(APIname, existingDict):
+    transforms = \
+        {
+            'VideoSource':
+                {
+                    'Id':                     'SourceId',
+                },
+            'Channel':
+                {
+                    'SourceId':               'SourceID',
+                    'MplexId':                'MplexID',
+                    'ChanId':                 'ChannelID',
+                    'ChanNum':                'ChannelNumber',
+                    'ServiceId':              'ServiceID',
+                    'ATSCMajorChan':          'ATSCMajorChannel',
+                    'ATSCMinorChan':          'ATSCMinorChannel',
+                    'Visible':                'visible',
+                    'FrequencyId':            'FrequencyID',
+                    'IconURL':                'Icon',
+                    'DefaultAuth':            'DefaultAuthority'
+                }
+        }
+    transform = transforms.get(APIname, {})
+    newDict = {}
+    for key, value in existingDict.items():
+        newKey = transform.get(key, key)
+        if newKey is not None:
+            newDict[newKey] = value
+    return newDict
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
