@@ -255,30 +255,12 @@ if __name__ == '__main__':
         mvisible = bool(mythChannel['Visible'] == 'true')
         if mvisible != desiredvisible and sourceValid:
             print('Channel {} visibility should be: {}'.format(chanNum, desiredvisible))
-            # Create update object (for some reason the
-            # names are not the same as a get)?
-            data = {}
             # Copy existing values
-            data['MplexID']            = mythChannel['MplexId']
-            data['SourceID']           = mythChannel['SourceId']
-            data['ChannelID']          = mythChannel['ChanId']
-            data['CallSign']           = mythChannel['CallSign']
-            data['ChannelName']        = mythChannel['ChannelName']
-            data['ChannelNumber']      = mythChannel['ChanNum']
-            data['ServiceID']          = mythChannel['ServiceId']
-            data['ATSCMajorChannel']   = mythChannel['ATSCMajorChan']
-            data['ATSCMinorChannel']   = mythChannel['ATSCMinorChan']
-            data['UseEIT']             = mythChannel['UseEIT']
-            data['visible']            = mythChannel['Visible']
-            data['FrequencyID']        = mythChannel['FrequencyId']
-            data['Icon']               = mythChannel['IconURL']
-            data['Format']             = mythChannel['Format']
-            data['XMLTVID']            = mythChannel['XMLTVID']
-            data['DefaultAuthority']   = mythChannel['DefaultAuth']
+            data = mythChannel.copy()
             # Optional (and what we want to set)
-            data['visible']            = desiredvisible
+            data['Visible']            = desiredvisible
             if args.update:
-                if bool(s.Channel('UpdateDBChannel', data)['bool']):
+                if bool(s.Channel('UpdateDBChannel', transformAPIElementNames('Channel', data))['bool']):
                     print('  Channel {} updated'.format(chanNum))
                 else:
                     print('  Channel {} update failed'.format(chanNum))
