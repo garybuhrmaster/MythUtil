@@ -221,11 +221,9 @@ if __name__ == '__main__':
     for mythChannel in mythChannelList:
         chanNum = mythChannel['ChanNum']
         freqId = mythChannel['FrequencyId']
-        sourceValid = True
         if freqId not in hdhrChannelList:
             print('Channel {} is not available on the tuner, visibility not available'.format(chanNum))
-            hdhrChannel = {}
-            sourceValid = False
+            continue
         else:
             hdhrChannel = hdhrChannelList[freqId]
         if 'Subscribed' not in hdhrChannel:
@@ -246,13 +244,11 @@ if __name__ == '__main__':
         if not enabled and args.respectdisabled:
             desiredvisible = False
         if args.forcevisible:
-            sourceValid = True
             desiredvisible = True
         if args.forceinvisible:
-            sourceValid = True
             desiredvisible = False
         mvisible = bool(mythChannel['Visible'] == 'true')
-        if mvisible != desiredvisible and sourceValid:
+        if mvisible != desiredvisible:
             print('Channel {} visibility should be: {}'.format(chanNum, desiredvisible))
             if ChannelServiceVersion >= versionTuple("1.9"):
                 data = {}
