@@ -137,6 +137,18 @@ def transformAPIElementNames(APIname, existingDict):
             newDict[newKey] = value
     return newDict
 
+def extendedVisibility(arg):
+    ua = str(arg).lower()
+    if ua in ['true'[:len(ua)], 'yes'[:len(ua)], '1', 'visible'[:len(ua)]]:
+        return 'Visible'
+    elif ua in ['false'[:len(ua)], 'no'[:len(ua)], '0', 'invisible'[:len(ua)], 'notvisible'[:len(ua)], 'not visible'[:len(ua)]]:
+        return 'Not Visible'
+    elif ua in ['always'[:len(ua)], '2', 'always visible'[:len(ua)]]:
+        return 'Always Visible'
+    elif ua in ['never'[:len(ua)], '-1', 'never visible'[:len(ua)]]:
+        return 'Never Visible'
+    raise argparse.ArgumentTypeError('{} is not a valid visible/true, not visible/false, always visible, never visible value'.format(arg))
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -179,6 +191,8 @@ if __name__ == '__main__':
                         help='do not check remote icon against local (bypass a slow/expensive check)')
     parser.add_argument('--refresh-icons', action='store_true', default=False, dest='refreshIcons',
                         help='refresh all eligible icons')
+    parser.add_argument('--visibility', action='store', type=extendedVisibility, dest='extendedvisible',
+                        default='Visible', help='specify the new channel(s) visibility')
     parser.add_argument('file', nargs='?', type=argparse.FileType('rb'), default=sys.stdin)
     args = parser.parse_args()
 
@@ -191,6 +205,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     ChannelServiceVersion = versionTuple(s.Channel('version')['String'])
+
+    if (ChannelServiceVersion < versionTuple("1.9")) and (args.extendedvisible in ['Never Visible', 'Always Visible']):
+        print('Warning: backend does not supported extended visibility settings')
 
     # Validate sourceid/name
     mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
@@ -459,7 +476,10 @@ if __name__ == '__main__':
                 data['ATSCMinorChan'] = 0
                 data['DefaultAuth'] = ''
                 data['Format'] = 'Default'
-                data['Visible'] = True
+                if ChannelServiceVersion >= versionTuple("1.9"):
+                    data['ExtendedVisible'] = args.extendedvisible
+                else:
+                    data['Visible'] = bool(args.extendedvisible in ['Visible', 'Always Visible'])
                 data['UseEIT'] = 0
                 data['MplexId'] = 0
                 data['ServiceId'] = 0
