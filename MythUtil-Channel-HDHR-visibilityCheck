@@ -254,8 +254,12 @@ if __name__ == '__main__':
         mvisible = bool(mythChannel['Visible'] == 'true')
         if mvisible != desiredvisible and sourceValid:
             print('Channel {} visibility should be: {}'.format(chanNum, desiredvisible))
-            # Copy existing values
-            data = mythChannel.copy()
+            if ChannelServiceVersion >= versionTuple("1.9"):
+                data = {}
+                data['ChanId'] = mythChannel['ChanId']
+            else:
+                # Copy existing values
+                data = mythChannel.copy()
             # Optional (and what we want to set)
             data['Visible']            = desiredvisible
             if args.update:

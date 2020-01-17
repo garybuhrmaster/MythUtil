@@ -291,7 +291,8 @@ if __name__ == '__main__':
         if sourceId is None:
             print('Video source was not found to delete')
             sys.exit(1)
-        data = source.copy()
+        data = {}
+        data['Id'] = source['Id']
         if bool(s.Channel('RemoveVideoSource', transformAPIElementNames('VideoSource', data))['bool']):
             print('Video source deleted')
             try:

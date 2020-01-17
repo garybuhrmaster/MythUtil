@@ -314,7 +314,8 @@ if __name__ == '__main__':
         if not found:
             print('Channel {}, callsign: "{}", name: "{}" is not in the XMLTV channel list'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['ChannelName']))
             if args.delete:
-                data = mythChannel.copy()
+                data = {}
+                data['ChanId'] = mythChannel['ChanId']
                 if bool(s.Channel('RemoveDBChannel', transformAPIElementNames('Channel', data))['bool']):
                     print('  Channel deleted')
                 else:
@@ -329,8 +330,12 @@ if __name__ == '__main__':
                 break
         if found:
             update = False
-            # Copy existing values
-            data = mythChannel.copy()
+            if ChannelServiceVersion >= versionTuple("1.9"):
+                data = {}
+                data['ChanId'] = mythChannel['ChanId']
+            else:
+                # Copy existing values
+                data = mythChannel.copy()
             if (xmlChannel['icon'] is None) and (mythChannel['IconURL'] == ''):
                 pass           # Nothing to see here
             elif (xmlChannel['icon'] is not None) and (mythChannel['IconURL'] == ''):
