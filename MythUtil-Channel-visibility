@@ -117,6 +117,18 @@ def transformAPIElementNames(APIname, existingDict):
             newDict[newKey] = value
     return newDict
 
+def extendedVisibility(arg):
+    ua = str(arg).lower()
+    if ua in ['true'[:len(ua)], 'yes'[:len(ua)], '1', 'visible'[:len(ua)]]:
+        return 'Visible'
+    elif ua in ['false'[:len(ua)], 'no'[:len(ua)], '0', 'invisible'[:len(ua)], 'notvisible'[:len(ua)], 'not visible'[:len(ua)]]:
+        return 'Not Visible'
+    elif ua in ['always'[:len(ua)], '2', 'always visible'[:len(ua)]]:
+        return 'Always Visible'
+    elif ua in ['never'[:len(ua)], '-1', 'never visible'[:len(ua)]]:
+        return 'Never Visible'
+    raise argparse.ArgumentTypeError('{} is not a valid visible/true, not visible/false, always visible, never visible value'.format(arg))
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -144,6 +156,8 @@ if __name__ == '__main__':
                               help='force the channel(s) to be set to visible')
     visiblegroup.add_argument('--force-invisible', action='store_true', default=False, dest='forceinvisible',
                               help='force the channel(s) to be set to invisible')
+    visiblegroup.add_argument('--visibility', action='store', type=extendedVisibility, dest='extendedvisible',
+                              help='specify the channel(s) visibility')
     parser.add_argument('--update', action='store_true', default=False,
                         help='update the channels to correct any detected problem.  The default is just report')
     args = parser.parse_args()
@@ -157,6 +171,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     ChannelServiceVersion = versionTuple(s.Channel('version')['String'])
+
+    if (ChannelServiceVersion < versionTuple("1.9")) and (args.extendedvisible in ['Never Visible', 'Always Visible']):
+        print('Warning: backend does not supported extended visibility settings')
 
     # Validate sourceid/name
     mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
@@ -190,22 +207,33 @@ if __name__ == '__main__':
     mythChannelList = natsort.natsorted(mythChannelList, key=lambda c: c['ChanNum'])
     for mythChannel in mythChannelList:
         chanNum = mythChannel['ChanNum']
-        mvisible = bool(mythChannel['Visible'] == 'true')
-        desiredvisible = mvisible
-        if args.forcevisible:
-            desiredvisible = True
-        if args.forceinvisible:
-            desiredvisible = False
+        if ChannelServiceVersion >= versionTuple("1.9"):
+            mvisible = mythChannel['ExtendedVisible']
+            desiredvisible = mvisible
+            if args.extendedvisible:
+                desiredvisible = args.extendedvisible
+            elif (args.forcevisible) and (mvisible in ['Visible', 'Not Visible']):
+                desiredvisible = 'Visible'
+            elif (args.forceinvisible) and (mvisible in ['Visible', 'Not Visible']):
+                desiredvisible = 'Not Visible'
+        else:
+            mvisible = bool(mythChannel['Visible'] == 'true')
+            desiredvisible = mvisible
+            if args.extendedvisible:
+                desiredvisible = bool(args.extendedvisible in ['Visible', 'Always Visible'])
+            elif args.forcevisible:
+                desiredvisible = True
+            elif args.forceinvisible:
+                desiredvisible = False
         if mvisible != desiredvisible:
             print('Channel {} visibility should be: {}'.format(chanNum, desiredvisible))
             if ChannelServiceVersion >= versionTuple("1.9"):
                 data = {}
                 data['ChanId'] = mythChannel['ChanId']
+                data['ExtendedVisible'] = desiredvisible
             else:
-                # Copy existing values
                 data = mythChannel.copy()
-            # Optional (and what we want to set)
-            data['Visible']            = desiredvisible
+                data['Visible'] = desiredvisible
             if args.update:
                 if bool(s.Channel('UpdateDBChannel', transformAPIElementNames('Channel', data))['bool']):
                     print('  Channel {} updated'.format(chanNum))
