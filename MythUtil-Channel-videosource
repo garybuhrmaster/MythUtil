@@ -110,7 +110,6 @@ def transformAPIElementNames(APIname, existingDict):
                     'ATSCMinorChan':          'ATSCMinorChannel',
                     'Visible':                'visible',
                     'FrequencyId':            'FrequencyID',
-                    'IconURL':                'Icon',
                     'DefaultAuth':            'DefaultAuthority'
                 }
         }
