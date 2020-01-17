@@ -65,16 +65,16 @@ class MythTVServices():
         return self.request(service='Video', api=api, data=data, method=method, stream=stream)
 
 def TrueOrFalse(arg):
-    ua = str(arg).upper()
-    if ua == 'TRUE'[:len(ua)]:
+    ua = str(arg).lower()
+    if ua == 'true'[:len(ua)]:
         return True
-    elif ua == 'YES'[:len(ua)]:
+    elif ua == 'yes'[:len(ua)]:
         return True
     elif ua == '1':
         return True
-    elif ua == 'FALSE'[:len(ua)]:
+    elif ua == 'false'[:len(ua)]:
         return False
-    elif ua == 'NO'[:len(ua)]:
+    elif ua == 'no'[:len(ua)]:
         return False
     elif ua == '0':
         return False
