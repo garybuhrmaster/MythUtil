@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import time
 import json
 import re
 import xml.etree.ElementTree
@@ -191,6 +192,8 @@ if __name__ == '__main__':
                         help='do not check remote icon against local (bypass a slow/expensive check)')
     parser.add_argument('--refresh-icons', action='store_true', default=False, dest='refreshIcons',
                         help='refresh all eligible icons')
+    parser.add_argument('--include-extra-icons', action='store_true', default=False, dest='extraIcons',
+                         help='include extra available icons when downloading')
     parser.add_argument('--visibility', action='store', type=extendedVisibility, dest='extendedvisible',
                         default='Visible', help='specify the new channel(s) visibility')
     parser.add_argument('file', nargs='?', type=argparse.FileType('rb'), default=sys.stdin)
@@ -268,7 +271,7 @@ if __name__ == '__main__':
             xmltvid = None
             callsign = None
             name = None
-            icon = None
+            icon = list()
             freqid = None
             if lineupEntry.find('preset') is not None:
                 channum = lineupEntry.find('preset').text
@@ -280,7 +283,9 @@ if __name__ == '__main__':
                 if lineupStation.find('short-name') is not None:
                     callsign = lineupStation.find('short-name').text
                 if lineupStation.find('logo') is not None:
-                    icon = lineupStation.find('logo').get('url', default=None)
+                    for logo in lineupStation.findall('logo'):
+                        if logo.get('url') is not None:
+                            icon.append(logo.get('url'))
             freqid = channum
             if lineupEntry.find('stb-channel/stb-preset') is not None:
                 freqid = lineupEntry.find('stb-channel/stb-preset').text
@@ -314,14 +319,14 @@ if __name__ == '__main__':
             for xmlChannel in xmlLineup:
                 if (xmlChannel['channum'] == channum) and (xmlChannel['xmltvid'] == xmltvid) and \
                     (xmlChannel['freqid'] == freqid) and (xmlChannel['name'] == name) and \
-                    (xmlChannel['callsign'] == callsign) and (xmlChannel['icon'] == icon):
+                    (xmlChannel['callsign'] == callsign):
                     continue
 
             xmlLineup.append(c)
 
     xmlLineup = natsort.natsorted(xmlLineup, key=lambda c: c['freqid'])
 
-    # Check for Channels that do not exist in get-lineup XML
+    # Check for MythTV channels that do not exist in get-lineup XMLTV channels
     for mythChannel in mythChannelList:
         found = False
         for xmlChannel in xmlLineup:
@@ -338,7 +343,7 @@ if __name__ == '__main__':
                 else:
                     print('  Channel deletion failed')
 
-    # Check XMLTV channels against Channels
+    # Check XMLTV channels against MythTV channels
     for xmlChannel in xmlLineup:
         found = False
         for mythChannel in mythChannelList:
@@ -353,21 +358,30 @@ if __name__ == '__main__':
             else:
                 # Copy existing values
                 data = mythChannel.copy()
-            if (xmlChannel['icon'] is None) and (mythChannel['IconURL'] == ''):
+            if (len(xmlChannel['icon']) == 0) and (mythChannel['IconURL'] == ''):
                 pass           # Nothing to see here
-            elif (xmlChannel['icon'] is not None) and (mythChannel['IconURL'] == ''):
+            elif (len(xmlChannel['icon']) > 0) and (mythChannel['IconURL'] == ''):
                 print('Channel {} has a new icon'.format(mythChannel['ChanNum']))
-                if not args.noUpdateIcons:
-                    iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
+                if ((not args.noUpdateIcons) and (args.update)):
+                    iconFilename = urllib.parse.urlparse(xmlChannel['icon'][0])[2].rpartition('/')[2]
                     downloadFileData = {}
                     downloadFileData['StorageGroup'] = 'ChannelIcons'
-                    downloadFileData['URL'] = xmlChannel['icon']
+                    downloadFileData['URL'] = xmlChannel['icon'][0]
                     if bool(s.Content('DownloadFile', downloadFileData)['bool']):
                         data['Icon'] = iconFilename
                         update = True
                     else:
                         print('   Channel {} icon download failed'.format(mythChannel['ChanNum']))
-            elif (xmlChannel['icon'] is None) and (mythChannel['IconURL'] != ''):
+                    if (args.extraIcons):
+                        for icon in xmlChannel['icon'][1:]:
+                            downloadFileData = {}
+                            downloadFileData['StorageGroup'] = 'ChannelIcons'
+                            downloadFileData['URL'] = icon
+                            if bool(s.Content('DownloadFile', downloadFileData)['bool']):
+                                pass
+                            else:
+                                print('   Channel {} extra icon download failed'.format(mythChannel['ChanNum']))
+            elif (len(xmlChannel['icon']) == 0) and (mythChannel['IconURL'] != ''):
                 print('Channel {} icon is no longer valid'.format(mythChannel['ChanNum']))
                 if not args.noUpdateIcons:
                     data['Icon'] = ''
@@ -382,6 +396,7 @@ if __name__ == '__main__':
                             mythChannelIcon = s.Guide('GetChannelIcon', {'ChanID': mythChannel['ChanId']}, stream=True).read()
                         except requests.exceptions.RequestException:
                             mythChannelIcon = None
+                            time.sleep(0.1)
                         else:
                             break
                     if mythChannelIcon is None:
@@ -389,26 +404,35 @@ if __name__ == '__main__':
                         mythChannelIcon = b''
                     mythChannelIconHash = hashlib.sha256(mythChannelIcon).hexdigest()
                     try:
-                        xmlIcon = requests.get(xmlChannel['icon']).content
+                        xmlIcon = requests.get(xmlChannel['icon'][0]).content
                     except requests.exceptions.RequestException:
                         print('Channel {} icon cannot be retrieved from source'.format(xmlChannel['channum']))
                         xmlIcon = b''
                     xmlIconHash = hashlib.sha256(xmlIcon).hexdigest()
-                    if (xmlIconHash != mythChannelIconHash) or (args.refreshIcons):
-                        if args.refreshIcons and (xmlIconHash == mythChannelIconHash):
-                            print('Channel {} icon refresh forced'.format(mythChannel['ChanNum']))
-                        else:
+                    if (xmlIconHash != mythChannelIconHash) or args.refreshIcons:
+                        if xmlIconHash != mythChannelIconHash:
                             print('Channel {} icon differs from source'.format(mythChannel['ChanNum']))
-                        if not args.noUpdateIcons:
-                            iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
+                        elif ((not args.noUpdateIcons) and (args.update)):
+                            print('Channel {} icon refresh forced'.format(mythChannel['ChanNum']))
+                        if ((not args.noUpdateIcons) and (args.update)):
+                            iconFilename = urllib.parse.urlparse(xmlChannel['icon'][0])[2].rpartition('/')[2]
                             downloadFileData = {}
                             downloadFileData['StorageGroup'] = 'ChannelIcons'
-                            downloadFileData['URL'] = xmlChannel['icon']
+                            downloadFileData['URL'] = xmlChannel['icon'][0]
                             if bool(s.Content('DownloadFile', downloadFileData)['bool']):
                                 data['Icon'] = iconFilename
                                 update = True
                             else:
                                 print('   Channel {} icon download failed'.format(mythChannel['ChanNum']))
+                            if (args.extraIcons):
+                                for icon in xmlChannel['icon'][1:]:
+                                    downloadFileData = {}
+                                    downloadFileData['StorageGroup'] = 'ChannelIcons'
+                                    downloadFileData['URL'] = icon
+                                    if bool(s.Content('DownloadFile', downloadFileData)['bool']):
+                                        pass
+                                    else:
+                                        print('   Channel {} extra icon download failed'.format(mythChannel['ChanNum']))
             if xmlChannel['freqid'] != mythChannel['FrequencyId']:
                 print('Channel {} with existing frequency id: "{}" has a revised frequency id: {}'.format(mythChannel['ChanNum'], mythChannel['FrequencyId'], xmlChannel['freqid']))
                 if not args.noUpdateFreqID:
@@ -441,14 +465,23 @@ if __name__ == '__main__':
                 # Attempt to download icon (if not excluded)
                 iconFilename = ''
                 if not args.noUpdateIcons:
-                    if xmlChannel['icon'] is not None:
+                    if (len(xmlChannel['icon']) > 0):
                         downloadFileData = {}
                         downloadFileData['StorageGroup'] = 'ChannelIcons'
-                        downloadFileData['URL'] = xmlChannel['icon']
+                        downloadFileData['URL'] = xmlChannel['icon'][0]
                         if bool(s.Content('DownloadFile', downloadFileData)['bool']):
-                            iconFilename = urllib.parse.urlparse(xmlChannel['icon'])[2].rpartition('/')[2]
+                            iconFilename = urllib.parse.urlparse(xmlChannel['icon'][0])[2].rpartition('/')[2]
                         else:
                             print('   Channel {} icon download failed'.format(xmlChannel['channum']))
+                        if (args.extraIcons):
+                            for icon in xmlChannel['icon'][1:]:
+                                downloadFileData = {}
+                                downloadFileData['StorageGroup'] = 'ChannelIcons'
+                                downloadFileData['URL'] = icon
+                                if bool(s.Content('DownloadFile', downloadFileData)['bool']):
+                                    pass
+                                else:
+                                    print('   Channel {} extra icon download failed'.format(xmlChannel['channum']))
                 # We need to create a valid ChannelID:
                 try:
                     chanId = sourceId * 10000 + int(xmlChannel['channum'])
