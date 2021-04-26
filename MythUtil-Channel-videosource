@@ -158,6 +158,8 @@ if __name__ == '__main__':
                         help='provider region id')
     parser.add_argument('--scan-frequency', action='store', type=unsignedInt, dest='scanFreq',
                         help='provider start scan frequency')
+    parser.add_argument('--lcnoffset', action='store', type=unsignedInt, dest='lcnoffset',
+                        help='offset for lcn')
     parser.add_argument('--frequency-table', default=None, type=str.lower, dest='freqTable',
                         choices=["default", "us-bcast", "us-cable", "us-cable-hrc",
                                  "us-cable-irc", "japan-bcast", "japan-cable", "europe-west",
@@ -188,8 +190,8 @@ if __name__ == '__main__':
 
     # If no action, just a list of video sources
     if (not args.add) and (not args.update) and (not args.delete):
-        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.grabberUserid is not None) or (args.grabberPassword is not None) or (args.bouquetId is not None) or (args.regionId is not None) or (args.scanFreq is not None) or (args.sourceNameNew is not None):
-            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, grabber-userid, grabber-password, bouquet-id, region-id, scan-frequency, or new-videosource-name')
+        if (args.grabber is not None) or (args.config is not None) or (args.useEIT is not None) or (args.networkId is not None) or (args.freqTable is not None) or (args.grabberUserid is not None) or (args.grabberPassword is not None) or (args.bouquetId is not None) or (args.regionId is not None) or (args.scanFreq is not None) or (args.sourceNameNew is not None) or (args.lcnoffset is not None):
+            print('List requests cannot specify the grabber, config, use-eit, network-id, frequency-table, grabber-userid, grabber-password, bouquet-id, region-id, scan-frequency, lcnoffset or new-videosource-name')
             sys.exit(1)
         mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
         print('Configured videosources:')
@@ -210,6 +212,8 @@ if __name__ == '__main__':
                 print('    BouquetID: {}'.format(source['BouquetId']))
                 print('    ReqionID:  {}'.format(source['RegionId']))
                 print('    ScanFreq:  {}'.format(source['ScanFrequency']))
+            if ChannelServiceVersion >= versionTuple("1.10"):
+                print('    LCNOffset: {}'.format(source['LCNOffset']))
         sys.exit(1)
 
     # Try to locate source name/id if specified
@@ -243,6 +247,7 @@ if __name__ == '__main__':
         data['BouquetId'] = 0
         data['RegionId'] = 0
         data['ScanFrequency'] = 0
+        data['LCNOffset'] = 0
         if args.grabber is not None:
             if (ChannelServiceVersion >= versionTuple("1.8")) and (args.grabber in ['schedulesdirect1', 'datadirect']):
                 print("Warning: backend version no longer supports the internal Schedules Direct grabber")
@@ -273,6 +278,10 @@ if __name__ == '__main__':
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support scan-frequency")
             data['ScanFrequency'] = args.scanFreq
+        if args.lcnoffset is not None:
+            if ChannelServiceVersion < versionTuple("1.10"):
+                print("Warning: backend version does not support lcnoffset")
+            data['LCNOffset'] = args.lcnoffset
         if int(s.Channel('AddVideoSource', transformAPIElementNames('VideoSource', data))['int']) > 0:
             print('Video source added')
             try:
@@ -344,6 +353,10 @@ if __name__ == '__main__':
             if ChannelServiceVersion < versionTuple("1.8"):
                 print("Warning: backend version does not support scan-frequency")
             data['ScanFrequency'] = args.scanFreq
+        if args.lcnoffset is not None:
+            if ChannelServiceVersion < versionTuple("1.10"):
+                print("Warning: backend version does not support lcnoffset")
+            data['LCNOffset'] = args.lcnoffset
         if bool(s.Channel('UpdateVideoSource', transformAPIElementNames('VideoSource', data))['bool']):
             print('Video source updated')
             try:
