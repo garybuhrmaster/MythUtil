@@ -292,14 +292,17 @@ if __name__ == '__main__':
             if lineupEntry.find('atsc-channel/number') is not None:
                 freqid = lineupEntry.find('atsc-channel/number').text
 
-            # reject some malformed lineup entries
-            if (freqid is None) or (freqid == ''):
-                continue
-            if (channum is None) or (channum == ''):
+            # preset is not required, so use the stb-preset
+            if (channum is None) and (freqid is not None):
+                channum = freqid
+
+            # reject malformed lineup entries
+            try:
+                channum = channelNormalize(channum)
+                freqid = channelNormalize(freqid)
+            except TypeError:
                 continue
 
-            channum = channelNormalize(channum)
-            freqid = channelNormalize(freqid)
             if args.channelInclude is not None:
                 if channum not in args.channelInclude:
                     continue
