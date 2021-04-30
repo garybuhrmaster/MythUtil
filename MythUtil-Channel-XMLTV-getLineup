@@ -93,6 +93,26 @@ def channelCheck(channel):
     except Exception:
         raise argparse.ArgumentTypeError('{} is not a valid channel'.format(channel))
 
+def channelOffset(channel, offset):
+    if ((offset is None) or (offset == 0)):
+        return channel
+    m0 = re.match(r'^(\d+)$', channel)
+    m1 = re.match(r'^(\d+)\.(\d+)$', channel)
+    if m0:
+        return '{}'.format((offset + int(m0.group(1))))
+    elif m1:
+        return '{}.{}'.format((offset + int(m1.group(1))), int(m1.group(2)))
+    raise TypeError('Invalid channel: {}'.format(channel))
+
+def unsignedInt(v):
+    try:
+        v = int(v)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
+    if v < 0:
+        raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
+    return v
+
 def versionTuple(v):
     return tuple(map(int, (v.split("."))))
 
@@ -183,6 +203,14 @@ if __name__ == '__main__':
                          help='include extra available icons when downloading')
     parser.add_argument('--visibility', action='store', type=extendedVisibility, dest='extendedvisible',
                         default='Visible', help='specify the new channel(s) visibility')
+    parser.add_argument('--lcnoffset', action='store', type=unsignedInt, dest='lcnoffset',
+                        help='lcnoffset override')
+    parser.add_argument('--no-lcnoffset', action='store_true', default=False, dest='noOffset',
+                        help='do not apply videosource lcnoffset to either channel or freqid numbers')
+    parser.add_argument('--no-lcnoffset-channel-number', action='store_true', default=False, dest='noOffsetChannum',
+                        help='do not apply videosource lcnoffset to channel number')
+    parser.add_argument('--no-lcnoffset-freqid', action='store_true', default=False, dest='noOffsetFreqID',
+                        help='do not apply videosource lcnoffset to freqid number')
     parser.add_argument('file', nargs='?', type=argparse.FileType('rb'), default=sys.stdin)
     args = parser.parse_args()
 
@@ -203,10 +231,15 @@ if __name__ == '__main__':
     mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
     sourceId = None
     sourceName = None
+    sourceOffset = 0
     for source in mythsl:
         if int(source['Id']) == args.sourceId or source['SourceName'] == args.sourceName:
             sourceId = int(source['Id'])
             sourceName = source['SourceName']
+            if ChannelServiceVersion >= versionTuple('1.10'):
+                sourceOffset = int(source['LCNOffset'])
+            if args.lcnoffset is not None:
+                sourceOffset = args.lcnoffset
             break
     if sourceId is None:
         print('Video source not found')
@@ -289,6 +322,12 @@ if __name__ == '__main__':
                 freqid = channelNormalize(freqid)
             except TypeError:
                 continue
+
+            # adjust channum and freqid if lcnoffset
+            if ((not args.noOffset) and (not args.noOffsetChannum)):
+                channum = channelOffset(channum, sourceOffset)
+            if ((not args.noOffset) and (not args.noOffsetFreqID)):
+                freqid = channelOffset(freqid, sourceOffset)
 
             if args.channelInclude is not None:
                 if channum not in args.channelInclude:
