@@ -214,7 +214,7 @@ if __name__ == '__main__':
                 print('    ScanFreq:  {}'.format(source['ScanFrequency']))
             if ChannelServiceVersion >= versionTuple("1.10"):
                 print('    LCNOffset: {}'.format(source['LCNOffset']))
-        sys.exit(1)
+        sys.exit(0)
 
     # Try to locate source name/id if specified
     mythsl = s.Channel('GetVideoSourceList')['VideoSourceList']['VideoSources']
