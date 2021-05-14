@@ -85,6 +85,15 @@ def channelCheck(channel):
     except Exception:
         raise argparse.ArgumentTypeError('{} is not a valid channel'.format(channel))
 
+def unsignedInt(v):
+    try:
+        v = int(v)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
+    if v < 0:
+        raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
+    return v
+
 def versionTuple(v):
     return tuple(map(int, (v.split("."))))
 
@@ -145,7 +154,7 @@ if __name__ == '__main__':
     sourcegroup = parser.add_mutually_exclusive_group(required=True)
     sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
                              help='the video source name')
-    sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
+    sourcegroup.add_argument('--videosource-id', action='store', type=unsignedInt, dest='sourceId',
                              help='the video source id')
     parser.add_argument('--channel', '--channels', '--include-channel', '--include-channels',
                         nargs='+', type=channelCheck, dest='channelInclude',

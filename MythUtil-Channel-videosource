@@ -135,7 +135,7 @@ if __name__ == '__main__':
     sourcegroup = parser.add_mutually_exclusive_group(required=False)
     sourcegroup.add_argument('--videosource-name', action='store', type=str, dest='sourceName',
                              help='the video source name')
-    sourcegroup.add_argument('--videosource-id', action='store', type=int, dest='sourceId',
+    sourcegroup.add_argument('--videosource-id', action='store', type=unsignedInt, dest='sourceId',
                              help='the video source id')
     actiongroup = parser.add_mutually_exclusive_group(required=False)
     actiongroup.add_argument('--add', action='store_true', default=False,
