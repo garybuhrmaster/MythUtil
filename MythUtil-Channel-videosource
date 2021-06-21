@@ -83,7 +83,7 @@ def TrueOrFalse(arg):
 def unsignedInt(v):
     try:
         v = int(v)
-    except ValueError as e:
+    except ValueError:
         raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
     if v < 0:
         raise argparse.ArgumentTypeError("{} is not a valid positive integer".format(v))
