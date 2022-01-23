@@ -157,6 +157,16 @@ def extendedVisibility(arg):
         return 'Never Visible'
     raise argparse.ArgumentTypeError('{} is not a valid visible/true, not visible/false, always visible, never visible value'.format(arg))
 
+def reportCheck(report):
+    reportType = str(report).lower()
+    if reportType == 'new'[:len(reportType)]:
+        return 'new'
+    if reportType == 'missing'[:len(reportType)]:
+        return 'missing'
+    if reportType == 'changed'[:len(reportType)]:
+        return 'changed'
+    raise argparse.ArgumentTypeError('{} is not a valid type to ignore'.format(report))
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -211,6 +221,8 @@ if __name__ == '__main__':
                         help='do not apply videosource lcnoffset to channel number')
     parser.add_argument('--no-lcnoffset-freqid', action='store_true', default=False, dest='noOffsetFreqID',
                         help='do not apply videosource lcnoffset to freqid number')
+    parser.add_argument('--no-report', nargs='+', type=reportCheck, dest='noReport',
+                        help='do not report (or act) on specified types ("new", "missing", "changed")')
     parser.add_argument('file', nargs='?', type=argparse.FileType('rb'), default=sys.stdin)
     args = parser.parse_args()
 
@@ -362,7 +374,7 @@ if __name__ == '__main__':
             if mythChannel['ChanNum'] == xmlChannel['channum']:
                 found = True
                 break
-        if not found:
+        if (not found) and ((args.noReport is None) or ('missing' not in args.noReport)):
             print('Channel {}, callsign: "{}", name: "{}" is not in the XMLTV channel list'.format(mythChannel['ChanNum'], mythChannel['CallSign'], mythChannel['ChannelName']))
             if args.delete:
                 data = {}
@@ -379,7 +391,7 @@ if __name__ == '__main__':
             if mythChannel['ChanNum'] == xmlChannel['channum']:
                 found = True
                 break
-        if found:
+        if found and ((args.noReport is None) or ('changed' not in args.noReport)):
             update = False
             if ChannelServiceVersion >= versionTuple("1.9"):
                 data = {}
@@ -488,7 +500,7 @@ if __name__ == '__main__':
                 else:
                     print('  Channel {} update failed'.format(mythChannel['ChanNum']))
 
-        if not found:
+        if (not found) and ((args.noReport is None) or ('new' not in args.noReport)):
             print('Channel {}, callsign: "{}", name: "{}" is new'.format(xmlChannel['channum'], xmlChannel['callsign'], xmlChannel['name']))
             if args.add:
                 # Attempt to download icon (if not excluded)
