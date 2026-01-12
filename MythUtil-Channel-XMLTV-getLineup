@@ -30,7 +30,7 @@ class MythTVServices():
             self.request(service='Myth', api='version')
 
     def request(self, service=None, api=None, data={}, method=None, stream=False):
-        version = '0.28'
+        version = '0.34'
         headers = {'User-Agent':'{} Python Services API Client'.format(version),
                    'Accept':'application/json',
                    'Accept-Encoding':'gzip,deflate'}
@@ -406,7 +406,7 @@ if __name__ == '__main__':
                 break
         if found and ((args.noReport is None) or ('changed' not in args.noReport)):
             update = False
-            if ChannelServiceVersion >= versionTuple("1.9"):
+            if ChannelServiceVersion == versionTuple("1.9"):
                 data = {}
                 data['ChanId'] = mythChannel['ChanId']
             else:
